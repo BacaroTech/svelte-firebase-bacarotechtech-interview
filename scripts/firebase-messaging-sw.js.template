@@ -1,0 +1,30 @@
+importScripts('https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.12.4/firebase-messaging-compat.js');
+firebase.initializeApp({
+  apiKey: '__PUBLIC_FIREBASE_API_KEY__',
+  authDomain: '__PUBLIC_FIREBASE_AUTH_DOMAIN__',
+  projectId: '__PUBLIC_FIREBASE_PROJECT_ID__',
+  storageBucket: '__PUBLIC_FIREBASE_STORAGE_BUCKET__',
+  messagingSenderId: '__PUBLIC_FIREBASE_MESSAGING_SENDER_ID__',
+  appId: '__PUBLIC_FIREBASE_APP_ID__',
+  measurementId: '__PUBLIC_FIREBASE_MEASUREMENT_ID__',
+});
+const messaging = firebase.messaging();
+
+// Called when a push arrives and the page is in the background/closed
+messaging.onBackgroundMessage((payload) => {
+  // Customize your notification
+  const { title, body, icon } = payload.notification ?? {};
+  self.registration.showNotification(title || 'New message', {
+    body,
+    icon,
+    data: payload.data || {}
+  });
+});
+
+// (Optional) Click handling
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = event.notification?.data?.click_action || '/';
+  event.waitUntil(clients.openWindow(url));
+});
