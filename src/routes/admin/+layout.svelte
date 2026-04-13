@@ -6,7 +6,6 @@
 
   const events = [
     { id: 'azure-vicenza', label: 'Azure Vicenza', emoji: '☁️' },
-    { id: 'gdg-pisa', label: 'GDG Pisa', emoji: '🐍' }
   ];
 </script>
 
