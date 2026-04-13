@@ -39,6 +39,7 @@
   {#each grouped as [timeKey, sessions]}
     {@const allService = sessions.every(s => s.isService)}
     {@const realSessions = sessions.filter(s => !s.isService)}
+    <!-- Mixed groups (sponsor slots alongside real talks) intentionally render only real sessions -->
 
     {#if allService}
       <!-- Service separator -->
@@ -56,11 +57,12 @@
         </p>
         <div class="space-y-2">
           {#each realSessions as session (session.id)}
+            {@const highlighted = isHighlighted(session)}
             <div class="rounded-lg border p-3 transition-colors
-              {isHighlighted(session)
+              {highlighted
                 ? 'border-amber-400 bg-amber-50'
                 : 'border-gray-200 bg-white'}">
-              {#if isHighlighted(session)}
+              {#if highlighted}
                 <span class="text-xs font-semibold text-amber-600 mb-1 block">★ Il tuo talk</span>
               {/if}
               <div class="flex items-start gap-2">
