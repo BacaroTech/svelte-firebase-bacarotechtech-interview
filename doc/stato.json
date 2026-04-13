@@ -1,16 +1,49 @@
 {
   "partecipanti": [
-    { "nome": "Guido Imperatore", "email": null },
-    { "nome": "Raffaele Colavecchi", "email": null },
-    { "nome": "Zeno Testoni", "email": null },
-    { "nome": "Andrea Saravalle", "email": null },
-    { "nome": "Carlo Pio Luigi Ciciriello", "email": "ciciriello.cpl@gmail.com" },
-    { "nome": "Salvatore Cavallaro", "email": "salvatorecavallaro98@gmail.com" },
-    { "nome": "Emanuele Ciminaghi", "email": null },
-    { "nome": "Giulio Sciarappa", "email": null },
-    { "nome": "Giuliano Latini", "email": null },
-    { "nome": "Luigi (organizzatore)", "email": null },
-    { "nome": "Andrea Marchi", "email": "andrea-marchi@outlook.it" }
+    {
+      "nome": "Guido Imperatore",
+      "email": "guido.imperatore@tech-cloud.it"
+    },
+    {
+      "nome": "Raffaele Colavecchi",
+      "email": "raffaele.colavecchi@cloudsolutionarchitect.eu"
+    },
+    {
+      "nome": "Zeno Testoni",
+      "email": "zeno.testoni@gmail.com"
+    },
+    {
+      "nome": "Andrea Saravalle",
+      "email": "andrea@andreasaravalle.it"
+    },
+    {
+      "nome": "Carlo Pio Luigi Ciciriello",
+      "email": "ciciriello.cpl@gmail.com"
+    },
+    {
+      "nome": "Salvatore Cavallaro",
+      "email": "salvatorecavallaro98@gmail.com"
+    },
+    {
+      "nome": "Emanuele Ciminaghi",
+      "email": "emanuele.ciminaghi@v-valley.com"
+    },
+    {
+      "nome": "Giulio Sciarappa",
+      "email": "giulios1234@gmail.com"
+    },
+    {
+      "nome": "Giuliano Latini",
+      "email": "giuliano.latini@jarvis.cloud"
+    },
+    {
+      "nome": "Luigi Pandolfino (organizzatore)",
+      "email": "luigi@pandolfino.it"
+    },
+    {
+      "nome": "Andrea Marchi",
+      "email": "andrea-marchi@outlook.it"
+    }
   ],
   "slot_giornata": [
     {
@@ -62,5 +95,17 @@
       "nome": "Andrea Marchi",
       "nota": "Se avanza un buco"
     }
+  ],
+  "listaEmailPersone": [
+    "Andrea Marchi Outlook <andrea-marchi@outlook.it>",
+    "Guido Imperatore Tech Cloud <guido.imperatore@tech-cloud.it>",
+    "Raffaele Colavecchi <raffaele.colavecchi@cloudsolutionarchitect.eu>",
+    "Zeno Testoni <zeno.testoni@gmail.com>",
+    "Andrea Saravalle <andrea@andreasaravalle.it>",
+    "Carlo Pio Luigi Ciciriello <ciciriello.cpl@gmail.com>",
+    "salvatorecavallaro98@gmail.com <salvatorecavallaro98@gmail.com>",
+    "Ciminaghi, Emanuele <emanuele.ciminaghi@v-valley.com>",
+    "giulios1234@gmail.com <giulios1234@gmail.com>",
+    "Giuliano Latini <giuliano.latini@jarvis.cloud>"
   ]
 }
