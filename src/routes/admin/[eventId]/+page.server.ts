@@ -3,6 +3,7 @@ import { VALID_EVENT_IDS, EVENT_CONFIG } from '$lib/config/events';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import type { InterviewSlot, Speaker } from '$lib/type/slots';
+import { env } from '$env/dynamic/private';
 
 export const load: PageServerLoad = async ({ params }) => {
     const { eventId } = params;
@@ -24,6 +25,7 @@ export const load: PageServerLoad = async ({ params }) => {
         .map(doc => ({ ...doc.data(), docId: doc.id } as Speaker));
 
     const eventConfig = EVENT_CONFIG[eventId as keyof typeof EVENT_CONFIG];
+    const baseUrl = env.PUBLIC_BASE_URL ?? 'http://localhost:5173';
 
-    return { slots, speakers, eventId, eventConfig };
+    return { slots, speakers, eventId, eventConfig, baseUrl };
 };

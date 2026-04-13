@@ -1,8 +1,6 @@
 <script lang="ts">
   import type { PageData } from './$types';
   import type { InterviewSlot, Speaker } from '$lib/type/slots';
-  import { PUBLIC_BASE_URL } from '$env/static/public';
-
   const { data }: { data: PageData } = $props();
 
   let slots = $state(data.slots);
@@ -37,7 +35,7 @@
   }
 
   function linkForSpeaker(speaker: Speaker): string {
-    return `${PUBLIC_BASE_URL}/${data.eventId}?token=${speaker.token}`;
+    return `${data.baseUrl}/${data.eventId}?token=${speaker.token}`;
   }
 
   async function copyLink(speaker: Speaker) {
