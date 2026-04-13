@@ -1,7 +1,7 @@
 <script lang="ts">
-  import type { PageData } from './$types';
+  import type { PageData, ActionData } from './$types';
   import type { InterviewSlot, Speaker } from '$lib/type/slots';
-  const { data }: { data: PageData } = $props();
+  const { data, form }: { data: PageData; form: ActionData } = $props();
 
   let slots = $state(data.slots);
   let speakers = $state(data.speakers);
@@ -15,6 +15,7 @@
   let newLink = $state('');
   let addError = $state('');
   let isAdding = $state(false);
+  let isReseeding = $state(false);
 
   const STATUS_OPTIONS = ['AVAILABLE', 'BOOKED', 'DONE', 'PROBLEMA', 'ANNULLATO'] as const;
 
@@ -203,5 +204,56 @@
         <p class="text-sm text-gray-400 text-center py-4">Nessuno speaker ancora. Aggiungine uno!</p>
       {/if}
     </div>
+  </section>
+
+  <!-- RESEED SPEAKER -->
+  <section class="bg-white rounded-xl shadow p-4 border border-orange-100">
+    <h2 class="text-base font-semibold text-gray-900 mb-1">Reset speaker da stato.json</h2>
+    <p class="text-sm text-gray-500 mb-3">
+      Cancella tutti gli speaker dell'evento e li ricrea da <code class="bg-gray-100 px-1 rounded text-xs">doc/stato.json</code>
+      con token freschi. I link precedenti diventano invalidi.
+    </p>
+
+    {#if form?.seedError}
+      <p class="text-sm text-red-600 mb-3">{form.seedError}</p>
+    {/if}
+
+    {#if form?.seedLinks}
+      <div class="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
+        <p class="text-xs font-semibold text-green-800 mb-2">✅ {form.seedCount} speaker ricreati — nuovi link:</p>
+        <div class="space-y-1 max-h-64 overflow-y-auto">
+          {#each form.seedLinks as { nome, link }}
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-gray-700 min-w-40 truncate">{nome}</span>
+              <button
+                onclick={() => navigator.clipboard.writeText(link)}
+                class="text-xs text-indigo-600 hover:text-indigo-500 whitespace-nowrap"
+              >📋 Copia</button>
+              <span class="text-xs text-gray-400 font-mono truncate">{link.split('token=')[1]?.slice(0,8)}…</span>
+            </div>
+          {/each}
+        </div>
+        <button
+          onclick={() => {
+            const text = form.seedLinks.map(({ nome, link }: { nome: string; link: string }) => `${nome}\t${link}`).join('\n');
+            navigator.clipboard.writeText(text);
+          }}
+          class="mt-2 text-xs text-indigo-600 underline"
+        >
+          Copia tutti come testo
+        </button>
+      </div>
+    {/if}
+
+    <form method="POST" action="?/reseedSpeakers"
+      onsubmit={(e) => { if (!confirm('Sei sicuro? Tutti i link esistenti diventeranno invalidi.')) e.preventDefault(); else isReseeding = true; }}>
+      <button
+        type="submit"
+        disabled={isReseeding}
+        class="rounded-md bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-400 disabled:opacity-50"
+      >
+        {isReseeding ? 'Reset in corso...' : '⟳ Reset e ricarica speaker'}
+      </button>
+    </form>
   </section>
 </div>

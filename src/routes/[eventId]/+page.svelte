@@ -1,15 +1,13 @@
 <script lang="ts">
-  import type { PageData } from './$types';
+  import type { PageData, ActionData } from './$types';
   import type { InterviewSlot } from '$lib/type/slots';
 
-  const { data }: { data: PageData } = $props();
+  const { data, form }: { data: PageData; form: ActionData } = $props();
 
   let selectedSlot = $state<InterviewSlot | null>(null);
   let view = $state<'slots' | 'confirmed' | 'error' | 'form'>(
-    data.tokenInvalid || !data.speaker ? 'error' : 'slots'
+    data.tokenInvalid ? 'error' : data.speaker ? 'slots' : 'form'
   );
-  let guestName = $state('');
-  let guestEmail = $state('');
   let bookingError = $state('');
   let isBooking = $state(false);
 
@@ -79,33 +77,30 @@
       </p>
     </div>
 
-  <!-- FORM: nessun token, inserisci nome -->
+  <!-- FORM: nessun token, accedi con email -->
   {:else if view === 'form'}
     <div class="bg-white rounded-xl shadow p-6">
+      <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">{data.eventConfig.dayLabel}</p>
       <h1 class="text-lg font-bold text-gray-900 mb-1">{data.eventConfig.name}</h1>
-      <p class="text-sm text-gray-500 mb-4">{data.eventConfig.dayLabel}</p>
-      <p class="text-sm text-gray-700 mb-4">Inserisci il tuo nome per vedere gli slot disponibili.</p>
-      <div class="space-y-3">
-        <input
-          type="text"
-          placeholder="Il tuo nome *"
-          bind:value={guestName}
-          class="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-        />
+      <p class="text-sm text-gray-500 mb-5">Inserisci l'email con cui ti sei registrato all'evento per accedere al tuo spazio.</p>
+      <form method="POST" action="?/emailLogin" class="space-y-3">
         <input
           type="email"
-          placeholder="Email (opzionale)"
-          bind:value={guestEmail}
-          class="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+          name="email"
+          placeholder="la-tua@email.it"
+          required
+          class="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
         />
+        {#if form?.emailError}
+          <p class="text-sm text-red-600">{form.emailError}</p>
+        {/if}
         <button
-          disabled={!guestName.trim()}
-          onclick={() => { if (guestName.trim()) view = 'slots'; }}
-          class="w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
+          type="submit"
+          class="w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
         >
-          Continua
+          Accedi
         </button>
-      </div>
+      </form>
     </div>
 
   <!-- SLOTS: lista slot da prenotare -->
@@ -121,7 +116,7 @@
             <p class="text-xs text-gray-400 mt-0.5">"{data.speaker.talk}"</p>
           {/if}
         {:else}
-          <p class="text-sm text-gray-600 mt-1">Ciao <strong>{guestName}</strong> 👋</p>
+          <p class="text-sm text-gray-600 mt-1">Benvenuto 👋</p>
         {/if}
       </div>
 

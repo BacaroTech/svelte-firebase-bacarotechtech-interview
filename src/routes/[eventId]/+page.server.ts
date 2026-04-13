@@ -1,7 +1,7 @@
 import { adminFirestore } from '$lib/firebase/firebase-admin.server';
 import { VALID_EVENT_IDS, EVENT_CONFIG } from '$lib/config/events';
-import { error } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
+import { error, redirect, fail } from '@sveltejs/kit';
+import type { PageServerLoad, Actions } from './$types';
 import type { InterviewSlot, Speaker } from '$lib/type/slots';
 
 export const load: PageServerLoad = async ({ params, url }) => {
@@ -43,4 +43,27 @@ export const load: PageServerLoad = async ({ params, url }) => {
     const speaker = { ...speakerDoc.data(), docId: speakerDoc.id } as Speaker;
 
     return { speaker, slots, eventId, eventConfig, tokenInvalid: false };
+};
+
+export const actions: Actions = {
+    emailLogin: async ({ request, params }) => {
+        const formData = await request.formData();
+        const email = ((formData.get('email') as string) ?? '').toLowerCase().trim();
+
+        if (!email) return fail(400, { emailError: 'Inserisci la tua email' });
+
+        const snap = await adminFirestore
+            .collection('speakers')
+            .where('email', '==', email)
+            .where('eventId', '==', params.eventId)
+            .limit(1)
+            .get();
+
+        if (snap.empty) {
+            return fail(404, { emailError: 'Email non trovata. Contatta Michele su Telegram per ricevere il tuo link.' });
+        }
+
+        const token = snap.docs[0].data().token as string;
+        redirect(302, `/${params.eventId}?token=${token}`);
+    }
 };
