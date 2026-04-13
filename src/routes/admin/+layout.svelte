@@ -25,6 +25,15 @@
         </a>
       {/each}
       <a
+        href="/admin/schedule"
+        class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors
+          {$page.url.pathname === '/admin/schedule'
+            ? 'bg-indigo-600 text-white'
+            : 'text-gray-600 hover:bg-gray-100'}"
+      >
+        📅 Programma
+      </a>
+      <a
         href="/admin/logout"
         class="px-3 py-1.5 rounded-md text-sm text-gray-400 hover:text-gray-600"
       >
