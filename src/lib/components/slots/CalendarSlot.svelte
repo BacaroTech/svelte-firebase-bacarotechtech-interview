@@ -33,7 +33,7 @@
         return "bg-blue-600";
       case "AVAILABLE":
         return "bg-green-500";
-      case "CANCELED":
+      case "ANNULLATO":
         return "bg-gray-400 text-gray-800 line-through";
       default:
         return "bg-gray-300";

@@ -1,32 +1,50 @@
-import { speakers } from '$lib/config/mock/fake-slot';
 import { adminFirestore as db } from '$lib/firebase/firebase-admin.server';
-
 import { json } from '@sveltejs/kit';
-
+import { v4 as uuidv4 } from 'uuid';
 import type { RequestHandler } from './$types';
 
-// Lista degli speaker da aggiungere (la stessa di prima)
-const speakersToAdd = [...speakers];
+export const POST: RequestHandler = async ({ request, locals }) => {
+    if (!locals.isAdmin) {
+        return json({ error: 'Non autorizzato' }, { status: 401 });
+    }
 
-// Gestisce POST /api/admin/speakers
-export const POST: RequestHandler = async () => {
+    let body: {
+        name?: string;
+        email?: string;
+        talk?: string;
+        eventId?: string;
+        notes?: string;
+        preferredSlots?: string[];
+    };
+
     try {
-        const batch = db.batch();
-        const speakersCollection = db.collection('speakers');
+        body = await request.json();
+    } catch {
+        return json({ error: 'JSON non valido' }, { status: 400 });
+    }
 
-        console.log(`Inizio aggiunta di ${speakersToAdd.length} speaker...`);
+    if (!body.name || !body.eventId) {
+        return json({ error: 'name e eventId sono richiesti' }, { status: 400 });
+    }
 
-        speakersToAdd.forEach((speaker) => {            
-            const docRef = speakersCollection.doc(); // Crea un nuovo ID documento
-            batch.set(docRef, speaker);
+    const token = uuidv4();
+
+    try {
+        const docRef = db.collection('speakers').doc();
+        await docRef.set({
+            name: body.name,
+            email: body.email ?? null,
+            talk: body.talk ?? null,
+            token,
+            eventId: body.eventId,
+            preferredSlots: body.preferredSlots ?? [],
+            notes: body.notes ?? '',
+            status: 'pending',
+            createdAt: new Date().toISOString()
         });
 
-        await batch.commit();
-
-        console.log('Speaker aggiunti con successo.');
-        return json({ message: `${speakersToAdd.length} speaker sono stati aggiunti con successo.` }, { status: 201 });
-    } catch (error) {
-        console.error("Errore durante l'aggiunta degli speaker:", error);
-        return json({ message: 'Errore interno del server.' }, { status: 500 });
+        return json({ docId: docRef.id, token }, { status: 201 });
+    } catch (e: any) {
+        return json({ error: 'Errore: ' + e.message }, { status: 500 });
     }
 };

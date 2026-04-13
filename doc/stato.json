@@ -1,0 +1,66 @@
+{
+  "partecipanti": [
+    { "nome": "Guido Imperatore", "email": null },
+    { "nome": "Raffaele Colavecchi", "email": null },
+    { "nome": "Zeno Testoni", "email": null },
+    { "nome": "Andrea Saravalle", "email": null },
+    { "nome": "Carlo Pio Luigi Ciciriello", "email": "ciciriello.cpl@gmail.com" },
+    { "nome": "Salvatore Cavallaro", "email": "salvatorecavallaro98@gmail.com" },
+    { "nome": "Emanuele Ciminaghi", "email": null },
+    { "nome": "Giulio Sciarappa", "email": null },
+    { "nome": "Giuliano Latini", "email": null },
+    { "nome": "Luigi (organizzatore)", "email": null },
+    { "nome": "Andrea Marchi", "email": "andrea-marchi@outlook.it" }
+  ],
+  "slot_giornata": [
+    {
+      "id": "mattina",
+      "label": "Slot Mattina",
+      "orario": "12:30 – 13:30",
+      "note": "Tra l'ultimo talk e il pranzo",
+      "capacita": "4-5 interviste"
+    },
+    {
+      "id": "pomeriggio",
+      "label": "Slot Pomeriggio",
+      "orario": "14:50 – 15:40",
+      "note": "Include coffee break",
+      "capacita": "4-5 interviste"
+    }
+  ],
+  "prenotazioni": [
+    {
+      "nome": "Guido Imperatore",
+      "slot": "mattina",
+      "note": "Ha sessione al pomeriggio, preferisce mattina"
+    },
+    {
+      "nome": "Carlo Pio Luigi Ciciriello",
+      "slot": "mattina",
+      "note": "Deve lasciare evento alle 14:30. Talk in Sala Verdi 11:40-12:30"
+    },
+    {
+      "nome": "Salvatore Cavallaro",
+      "slot": "mattina",
+      "note": "Insieme a Carlo, stessi vincoli"
+    }
+  ],
+  "non_prenotati": [
+    "Raffaele Colavecchi",
+    "Zeno Testoni",
+    "Andrea Saravalle",
+    "Emanuele Ciminaghi",
+    "Giulio Sciarappa",
+    "Giuliano Latini"
+  ],
+  "opzionali": [
+    {
+      "nome": "Luigi",
+      "nota": "Se avanza un buco"
+    },
+    {
+      "nome": "Andrea Marchi",
+      "nota": "Se avanza un buco"
+    }
+  ]
+}
