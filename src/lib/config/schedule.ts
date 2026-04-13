@@ -66,15 +66,21 @@ export const SESSIONS: TalkSession[] = [
   { id: '1105471', title: 'Applicazioni più intelligenti con Power Platform e AI', speakers: ['Stefano Bisca'], room: 'Mozart', startTime: '2026-04-17T15:00:00.000Z', endTime: '2026-04-17T15:50:00.000Z', isService: false },
 ];
 
+// Pre-computed numeric timestamps to avoid repeated Date allocations on reactive calls
+const SESSION_TIMES = SESSIONS.map(s => ({
+  session: s,
+  startMs: new Date(s.startTime).getTime(),
+  endMs:   new Date(s.endTime).getTime(),
+}));
+
 /**
  * Returns non-service sessions that overlap with slotStartTime.
  * Condition: session.startTime <= slotStartTime < session.endTime
  */
 export function getTalksAtTime(slotStartTime: string): TalkSession[] {
   const t = new Date(slotStartTime).getTime();
-  return SESSIONS.filter(s =>
-    !s.isService &&
-    new Date(s.startTime).getTime() <= t &&
-    t < new Date(s.endTime).getTime()
-  );
+  if (isNaN(t)) return [];
+  return SESSION_TIMES
+    .filter(({ session, startMs, endMs }) => !session.isService && startMs <= t && t < endMs)
+    .map(({ session }) => session);
 }
