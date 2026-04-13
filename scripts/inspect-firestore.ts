@@ -55,8 +55,14 @@ function pad(s: string, n: number) {
 
 // ── Stampa slots ──────────────────────────────────────────────────────────────
 async function printSlots() {
-  let query: FirebaseFirestore.Query = db.collection('slots').orderBy('startTime');
-  if (eventFilter) query = query.where('eventId', '==', eventFilter);
+  // orderBy('startTime') senza eventId filter: ok (single-field index)
+  // where('eventId') + orderBy('startTime'): richiede composite index → lo evitiamo
+  let query: FirebaseFirestore.Query = db.collection('slots');
+  if (eventFilter) {
+    query = query.where('eventId', '==', eventFilter);
+  } else {
+    query = query.orderBy('startTime');
+  }
 
   const snap = await query.get();
   console.log(`\n📅  SLOTS  (${snap.size} documenti${eventFilter ? ` — evento: ${eventFilter}` : ''})\n`);
@@ -94,11 +100,17 @@ async function printSlots() {
 
 // ── Stampa speakers ───────────────────────────────────────────────────────────
 async function printSpeakers() {
-  let query: FirebaseFirestore.Query = db.collection('speakers').orderBy('name');
-  if (eventFilter) query = query.where('eventId', '==', eventFilter);
+  // Stessa logica slot: where + orderBy richiederebbe composite index
+  let query: FirebaseFirestore.Query = db.collection('speakers');
+  if (eventFilter) {
+    query = query.where('eventId', '==', eventFilter);
+  } else {
+    query = query.orderBy('name');
+  }
 
   const snap = await query.get();
-  console.log(`\n👤  SPEAKERS  (${snap.size} documenti${eventFilter ? ` — evento: ${eventFilter}` : ''})\n`);
+  const orphans = snap.docs.filter(d => !d.data().eventId);
+  console.log(`\n👤  SPEAKERS  (${snap.size} documenti${eventFilter ? ` — evento: ${eventFilter}` : ''})${orphans.length ? `  ⚠️  ${orphans.length} orfani senza eventId` : ''}\n`);
 
   if (snap.empty) {
     console.log('   (nessun documento)\n');
@@ -131,8 +143,33 @@ async function printSpeakers() {
   console.log();
 }
 
+// ── Purge orfani (documenti senza eventId) ────────────────────────────────────
+async function purgeOrphans() {
+  const collections = collectionArg ? [collectionArg] : ['slots', 'speakers'];
+  for (const col of collections) {
+    const snap = await db.collection(col).get();
+    const orphans = snap.docs.filter(d => !d.data().eventId);
+    if (orphans.length === 0) {
+      console.log(`✅  ${col}: nessun orfano da eliminare`);
+      continue;
+    }
+    console.log(`🗑  ${col}: elimino ${orphans.length} orfani...`);
+    const batch = db.batch();
+    orphans.forEach(d => batch.delete(d.ref));
+    await batch.commit();
+    console.log(`✅  ${col}: eliminati ${orphans.length} documenti orfani`);
+  }
+  console.log();
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
+const purgeMode = args.includes('--purge-orphans');
+
 async function inspect() {
+  if (purgeMode) {
+    console.log('\n⚠️   Modalità PURGE — elimino tutti i documenti senza eventId\n');
+    await purgeOrphans();
+  }
   if (!collectionArg || collectionArg === 'slots') await printSlots();
   if (!collectionArg || collectionArg === 'speakers') await printSpeakers();
 }
