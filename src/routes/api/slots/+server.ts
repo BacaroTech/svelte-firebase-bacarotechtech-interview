@@ -1,91 +1,9 @@
 import { adminFirestore } from '$lib/firebase/firebase-admin.server';
-import type {
-  InterviewSlot,
-  SpeakerDetails,
-} from '$lib/type/slots';
 import { v4 as uuidv4 } from 'uuid';
 
 import { json } from '@sveltejs/kit';
 
 import type { RequestHandler } from './$types';
-
-// Funzione helper per generare un ID pseudo-casuale (simula l'UUID di Firestore)
-function generateFakeId(): string {
-    return 'slot_' + Math.random().toString(36).substring(2, 9);
-}
-
-// 2. Dati Fittizi degli Speaker (Denormalizzazione)
-// Questo oggetto simula la collezione /speakers che verrebbe letta per denormalizzare i dati.
-const speakerData: SpeakerDetails = {
-    name: 'tizio',
-    uid: 'abc123',
-};
-const enableMock = false
-function mockSlot() {
-    const today = new Date();
-    const eventId = 'conf_2025_tech';
-
-    // Array di slot per la demo
-    const fakeSlots: InterviewSlot[] = [
-        // Slot 1: Disponibile
-        {
-            docId: generateFakeId(),
-            id: generateFakeId(),
-            eventId: eventId,
-            startTime: new Date(today.setHours(10, 30, 0, 0)).toISOString(),
-            endTime: new Date(today.setHours(11, 0, 0, 0)).toISOString(),
-            status: 'AVAILABLE',
-            speakerUid: null,
-            speakerName: null,
-            bookedAt: null,
-        },
-        // Slot 2: Disponibile
-        {
-            docId: generateFakeId(),
-            id: generateFakeId(),
-            eventId: eventId,
-            startTime: new Date(today.setHours(11, 0, 0, 0)).toISOString(),
-            endTime: new Date(today.setHours(11, 30, 0, 0)).toISOString(),
-            status: 'AVAILABLE',
-            speakerUid: null,
-            speakerName: null,
-            bookedAt: null,
-        },
-        // Slot 3: Prenotato
-        {
-            docId: generateFakeId(),
-            id: generateFakeId(),
-            eventId: eventId,
-            startTime: new Date(today.setHours(14, 0, 0, 0)).toISOString(),
-            endTime: new Date(today.setHours(14, 30, 0, 0)).toISOString(),
-            status: 'BOOKED',
-            // Usa il secondo speaker (indice 1)
-            speakerUid: speakerData.uid,
-            speakerName: speakerData.name,
-
-            bookedAt: new Date().toISOString(),
-        },
-        // Slot 4: Disponibile (Più tardi)
-        {
-            docId: generateFakeId(),
-            id: generateFakeId(),
-            eventId: eventId,
-            startTime: new Date(today.setHours(15, 0, 0, 0)).toISOString(),
-            endTime: new Date(today.setHours(15, 30, 0, 0)).toISOString(),
-            status: 'AVAILABLE',
-            speakerUid: null,
-            speakerName: null,
-            bookedAt: null,
-        }
-    ];
-
-    // Restituisce l'array JSON di slot
-    return json({
-        slots: fakeSlots,
-        total: fakeSlots.length,
-        timestamp: new Date().toISOString()
-    });
-}
 
 async function readFirebaseSlot(eventId?: string) {
     try {
@@ -105,24 +23,21 @@ async function readFirebaseSlot(eventId?: string) {
 }
 
 /**
- * Gestisce la richiesta GET per recuperare i dati degli slot fittizi.
+ * Gestisce la richiesta GET per recuperare i dati degli slot.
  */
 export const GET: RequestHandler = async ({ url }) => {
     const eventId = url.searchParams.get('eventId') ?? undefined;
-    if (enableMock)
-        return mockSlot();
-    else
-        return readFirebaseSlot(eventId);
+    return readFirebaseSlot(eventId);
 };
 
 export async function POST({ request }) {
-    const { name, startTime, endTime } = await request.json();
+    const { name, startTime, endTime, eventId } = await request.json();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    if (!name || !startTime || !endTime) {
-        return json({ error: 'Nome e orario sono richiesti.' }, { status: 400 });
+    if (!name || !startTime || !endTime || !eventId) {
+        return json({ error: 'Nome, orario e eventId sono richiesti.' }, { status: 400 });
     }
-    
+
     const [hoursStart, minutesStart] = startTime.split(':').map(Number);
     const _startTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), hoursStart, minutesStart);
 
@@ -133,6 +48,7 @@ export async function POST({ request }) {
         const slotData = {
             id: uuidv4(),
             name,
+            eventId,
             startTime: _startTime,
             endTime: _endTime,
             status: 'AVAILABLE',
@@ -177,14 +93,17 @@ async function deleteQueryBatch(query: FirebaseFirestore.Query, resolve: (value?
 		deleteQueryBatch(query, resolve);
 	});
 }
-export const DELETE: RequestHandler = async () => {
+export const DELETE: RequestHandler = async ({ locals }) => {
+	if (!locals.isAdmin) {
+		return json({ error: 'Non autorizzato' }, { status: 401 });
+	}
 	try {
-        
+
         console.log("deleting....")
         const slotsSnapshot = await adminFirestore.collection('slots').get()
         const count = slotsSnapshot.docs.length;
-        await deleteCollection('slots', 500); 
-      		
+        await deleteCollection('slots', 500);
+
 		console.log(`Eliminati ${count} slot.`);
 		return json({ message: `Tutti gli slot (${count}) sono stati eliminati con successo.` }, { status: 200 });
 	} catch (error) {
