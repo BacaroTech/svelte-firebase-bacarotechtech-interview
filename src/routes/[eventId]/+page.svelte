@@ -6,7 +6,7 @@
 
   let selectedSlot = $state<InterviewSlot | null>(null);
   let view = $state<'slots' | 'confirmed' | 'error' | 'form'>(
-    data.tokenInvalid ? 'error' : data.speaker ? 'slots' : 'form'
+    data.tokenInvalid || !data.speaker ? 'error' : 'slots'
   );
   let guestName = $state('');
   let guestEmail = $state('');
@@ -57,10 +57,10 @@
   {#if view === 'error'}
     <div class="bg-white rounded-xl shadow p-6 text-center">
       <p class="text-4xl mb-3">😕</p>
-      <h1 class="text-lg font-bold text-gray-900 mb-2">Link non valido</h1>
+      <h1 class="text-lg font-bold text-gray-900 mb-2">Link non valido o mancante</h1>
       <p class="text-gray-500 text-sm">
-        Questo link non è più valido o è scaduto.<br />
-        Contatta Michele su Telegram per ricevere il tuo link personale.
+        Hai bisogno del tuo link personale per prenotare uno slot.<br />
+        Contatta Michele su Telegram per riceverlo.
       </p>
     </div>
 

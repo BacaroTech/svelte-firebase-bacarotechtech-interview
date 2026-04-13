@@ -26,7 +26,7 @@
         </a>
       {/each}
       <a
-        href="/admin/login"
+        href="/admin/logout"
         class="px-3 py-1.5 rounded-md text-sm text-gray-400 hover:text-gray-600"
       >
         Logout
