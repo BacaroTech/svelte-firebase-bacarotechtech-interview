@@ -1,11 +1,12 @@
 <script lang="ts">
   import type { PageData, ActionData } from './$types';
   import type { InterviewSlot } from '$lib/type/slots';
+  import EventSchedule from '$lib/components/schedule/EventSchedule.svelte';
 
   const { data, form }: { data: PageData; form: ActionData } = $props();
 
   let selectedSlot = $state<InterviewSlot | null>(null);
-  let view = $state<'slots' | 'confirmed' | 'error' | 'form'>(
+  let view = $state<'slots' | 'confirmed' | 'error' | 'form' | 'schedule'>(
     data.tokenInvalid ? 'error' : data.speaker ? 'slots' : 'form'
   );
   let bookingError = $state('');
@@ -139,7 +140,29 @@
   </div>
 {/snippet}
 
-<div class="min-h-screen bg-gray-50 px-4 py-6 max-w-lg mx-auto space-y-4">
+<div class="min-h-screen bg-gray-50 px-4 py-6 max-w-5xl mx-auto">
+
+  <!-- Tab nav: visible on all views except 'confirmed' -->
+  {#if view !== 'confirmed'}
+    <div class="flex gap-2 bg-white rounded-xl shadow p-1 mb-4 max-w-lg mx-auto">
+      <button
+        onclick={() => { if (view === 'schedule') view = data.speaker ? 'slots' : data.tokenInvalid ? 'error' : 'form'; }}
+        class="flex-1 py-2 text-sm font-medium rounded-lg transition-colors
+          {view !== 'schedule' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-100'}"
+      >
+        Prenota
+      </button>
+      <button
+        onclick={() => { view = 'schedule'; }}
+        class="flex-1 py-2 text-sm font-medium rounded-lg transition-colors
+          {view === 'schedule' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-100'}"
+      >
+        Programma
+      </button>
+    </div>
+  {/if}
+
+  <div class="space-y-4 max-w-lg mx-auto">
 
   <!-- ERROR: token non valido — mostra form email per recupero -->
   {#if view === 'error'}
@@ -282,5 +305,12 @@
         </div>
       {/if}
     </div>
+
+  {:else if view === 'schedule'}
+    <div class="bg-white rounded-xl shadow p-4">
+      <EventSchedule highlightSpeakerName={data.speaker?.name ?? ''} />
+    </div>
   {/if}
+
+  </div>
 </div>
