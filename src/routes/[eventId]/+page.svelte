@@ -91,13 +91,14 @@
           {isMe ? '✓ Il tuo slot' : available ? (preferred ? '★ Preferenza' : 'Libero') : (slot.speakerName ?? 'Occupato')}
         </span>
       </div>
-      {#if available || isMe}
+      {#if !!data.speaker}
         {@const talks = getTalksAtTime(slot.startTime)}
+        {@const myNameLower = data.speaker.name.toLowerCase()}
         {#if talks.length > 0}
           <div class="mt-1.5 flex flex-wrap gap-1">
             {#each talks as talk (talk.id)}
               <span class="text-xs px-1.5 py-0.5 rounded-full
-                {data.speaker?.name && talk.speakers.some(s => s.toLowerCase().includes(data.speaker!.name.toLowerCase()))
+                {talk.speakers.some(s => s.toLowerCase().includes(myNameLower))
                   ? 'bg-amber-100 text-amber-700 font-semibold'
                   : 'bg-gray-100 text-gray-500'}">
                 {talk.room}: {talk.speakers.length > 0 ? talk.speakers[0] : talk.title.slice(0, 30)}
@@ -185,7 +186,7 @@
     </div>
   {/if}
 
-  <div class="{view === 'schedule' ? 'w-full' : 'space-y-4 max-w-lg mx-auto'}">
+  <div class="{view === 'schedule' || view === 'slots' ? 'w-full' : 'space-y-4 max-w-lg mx-auto'}">
 
   <!-- ERROR: token non valido — mostra form email per recupero -->
   {#if view === 'error'}
