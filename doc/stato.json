@@ -1,106 +1,66 @@
 {
-  "evento": {
-    "nome": "Azure Vicenza",
-    "data": "2026-04-17",
-    "luogo": "Vicenza"
-  },
   "partecipanti": [
+    { "nome": "Guido Imperatore", "email": null },
+    { "nome": "Raffaele Colavecchi", "email": null },
+    { "nome": "Zeno Testoni", "email": null },
+    { "nome": "Andrea Saravalle", "email": null },
+    { "nome": "Carlo Pio Luigi Ciciriello", "email": "ciciriello.cpl@gmail.com" },
+    { "nome": "Salvatore Cavallaro", "email": "salvatorecavallaro98@gmail.com" },
+    { "nome": "Emanuele Ciminaghi", "email": null },
+    { "nome": "Giulio Sciarappa", "email": null },
+    { "nome": "Giuliano Latini", "email": null },
+    { "nome": "Luigi (organizzatore)", "email": null },
+    { "nome": "Andrea Marchi", "email": "andrea-marchi@outlook.it" }
+  ],
+  "slot_giornata": [
     {
-      "nome": "Marco Rossi",
-      "email": "marco.rossi@example.com"
+      "id": "mattina",
+      "label": "Slot Mattina",
+      "orario": "12:30 – 13:30",
+      "note": "Tra l'ultimo talk e il pranzo",
+      "capacita": "4-5 interviste"
     },
     {
-      "nome": "Anna Bianchi",
-      "email": "anna.bianchi@example.com"
-    },
-    {
-      "nome": "Luca Verdi",
-      "email": "luca.verdi@example.com"
-    },
-    {
-      "nome": "Giulia Ferrari",
-      "email": "giulia.ferrari@example.com"
-    },
-    {
-      "nome": "Paolo Gallo",
-      "email": "paolo.gallo@example.com"
-    },
-    {
-      "nome": "Elena Rossi",
-      "email": "elena.rossi@example.com"
-    },
-    {
-      "nome": "Giovanni Bianchi",
-      "email": "giovanni.bianchi@example.com"
-    },
-    {
-      "nome": "Sara Verdi",
-      "email": "sara.verdi@example.com"
-    },
-    {
-      "nome": "Andrea Ferrari",
-      "email": "andrea.ferrari@example.com"
-    },
-    {
-      "nome": "Francesca Gallo",
-      "email": "francesca.gallo@example.com"
+      "id": "pomeriggio",
+      "label": "Slot Pomeriggio",
+      "orario": "14:50 – 15:40",
+      "note": "Include coffee break",
+      "capacita": "4-5 interviste"
     }
   ],
   "prenotazioni": [
     {
-      "nome": "Marco Rossi",
+      "nome": "Guido Imperatore",
       "slot": "mattina",
-      "note": "Preferisce prima intervista"
+      "note": "Ha sessione al pomeriggio, preferisce mattina"
     },
     {
-      "nome": "Anna Bianchi",
+      "nome": "Carlo Pio Luigi Ciciriello",
       "slot": "mattina",
-      "note": ""
+      "note": "Deve lasciare evento alle 14:30. Talk in Sala Verdi 11:40-12:30"
     },
     {
-      "nome": "Luca Verdi",
-      "slot": "pomeriggio",
-      "note": "Disponibile dopo le 15:00"
-    },
-    {
-      "nome": "Giulia Ferrari",
-      "slot": "pomeriggio",
-      "note": ""
-    },
-    {
-      "nome": "Paolo Gallo",
+      "nome": "Salvatore Cavallaro",
       "slot": "mattina",
-      "note": "Connessione zoom se possibile"
-    },
-    {
-      "nome": "Elena Rossi",
-      "slot": "pomeriggio",
-      "note": ""
-    },
-    {
-      "nome": "Giovanni Bianchi",
-      "slot": "mattina",
-      "note": ""
-    },
-    {
-      "nome": "Sara Verdi",
-      "slot": "pomeriggio",
-      "note": "Intervista in inglese"
-    },
-    {
-      "nome": "Andrea Ferrari",
-      "slot": "mattina",
-      "note": ""
-    },
-    {
-      "nome": "Francesca Gallo",
-      "slot": "pomeriggio",
-      "note": "Reporter richiesta"
+      "note": "Insieme a Carlo, stessi vincoli"
     }
+  ],
+  "non_prenotati": [
+    "Raffaele Colavecchi",
+    "Zeno Testoni",
+    "Andrea Saravalle",
+    "Emanuele Ciminaghi",
+    "Giulio Sciarappa",
+    "Giuliano Latini"
   ],
   "opzionali": [
     {
-      "nome": "Guest"
+      "nome": "Luigi",
+      "nota": "Se avanza un buco"
+    },
+    {
+      "nome": "Andrea Marchi",
+      "nota": "Se avanza un buco"
     }
   ]
 }
