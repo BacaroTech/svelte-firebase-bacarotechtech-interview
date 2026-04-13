@@ -71,7 +71,8 @@ Comportamento:
 - Aggiungere sezione "Talk in corso" sotto i dati dello slot
 - Chiama `getTalksAtTime(slot.startTime)` per ottenere i talk paralleli
 - Mostra: room + titolo per ogni talk
-- Se `speakerTalk` (stringa con il titolo del talk dallo speaker profile) è presente, il talk corrispondente viene evidenziato con badge colorato
+- Accetta prop opzionale `speakerTalk?: string` — il valore di `Speaker.talk` (titolo del talk) disponibile solo in `/app/home` dove lo speaker è autenticato
+- Se `speakerTalk` è presente, il talk il cui titolo contiene la stringa (match parziale case-insensitive) viene evidenziato con badge colorato "Il tuo talk"
 
 ## State Management
 
@@ -88,8 +89,8 @@ Trasformata in layout a 2 colonne:
 - Colonna sinistra (2/3): lista slot esistente
 - Colonna destra (1/3): `ScheduleSidebar`
 
-### `interview/+page.svelte` (speaker via token)
-Aggiungere `ScheduleSidebar` accanto a `CalendarInterview`, con `highlightSpeakerName` passato dallo speaker profile.
+### `interview/+page.svelte` (vista pubblica calendario)
+Aggiungere `ScheduleSidebar` accanto a `CalendarInterview`. Nessun highlight (la route non carica profilo speaker — no auth, no token). Solo visualizzazione programma affiancata.
 
 ## Out of Scope
 
