@@ -87,11 +87,14 @@ function mockSlot() {
     });
 }
 
-async function readFirebaseSlot() {
+async function readFirebaseSlot(eventId?: string) {
     try {
-        const slotsSnapshot = await adminFirestore.collection('slots').get()
-
-        const slots = slotsSnapshot.docs.map(doc => ({            
+        let query: FirebaseFirestore.Query = adminFirestore.collection('slots');
+        if (eventId) {
+            query = query.where('eventId', '==', eventId);
+        }
+        const slotsSnapshot = await query.get();
+        const slots = slotsSnapshot.docs.map(doc => ({
             ...doc.data(),
             docId: doc.id
         }));
@@ -100,14 +103,16 @@ async function readFirebaseSlot() {
         return json({ error: 'Errore durante la lettura degli slot: ' + e.message }, { status: 500 });
     }
 }
+
 /**
  * Gestisce la richiesta GET per recuperare i dati degli slot fittizi.
  */
-export const GET: RequestHandler = async () => {
+export const GET: RequestHandler = async ({ url }) => {
+    const eventId = url.searchParams.get('eventId') ?? undefined;
     if (enableMock)
         return mockSlot();
     else
-        return readFirebaseSlot();
+        return readFirebaseSlot(eventId);
 };
 
 export async function POST({ request }) {
