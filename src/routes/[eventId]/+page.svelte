@@ -144,8 +144,11 @@
 
   <!-- Tab nav: visible on all views except 'confirmed' -->
   {#if view !== 'confirmed'}
-    <div class="flex gap-2 bg-white rounded-xl shadow p-1 mb-4 max-w-lg mx-auto">
+    <div role="tablist" class="flex gap-2 bg-white rounded-xl shadow p-1 mb-4 max-w-lg mx-auto">
       <button
+        type="button"
+        role="tab"
+        aria-selected={view !== 'schedule'}
         onclick={() => { if (view === 'schedule') view = data.speaker ? 'slots' : data.tokenInvalid ? 'error' : 'form'; }}
         class="flex-1 py-2 text-sm font-medium rounded-lg transition-colors
           {view !== 'schedule' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-100'}"
@@ -153,6 +156,9 @@
         Prenota
       </button>
       <button
+        type="button"
+        role="tab"
+        aria-selected={view === 'schedule'}
         onclick={() => { view = 'schedule'; }}
         class="flex-1 py-2 text-sm font-medium rounded-lg transition-colors
           {view === 'schedule' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-100'}"
@@ -162,7 +168,7 @@
     </div>
   {/if}
 
-  <div class="space-y-4 max-w-lg mx-auto">
+  <div class="{view === 'schedule' ? 'w-full' : 'space-y-4 max-w-lg mx-auto'}">
 
   <!-- ERROR: token non valido — mostra form email per recupero -->
   {#if view === 'error'}
