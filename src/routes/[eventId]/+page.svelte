@@ -126,15 +126,30 @@
 
 <div class="min-h-screen bg-gray-50 px-4 py-6 max-w-lg mx-auto space-y-4">
 
-  <!-- ERROR: token non valido -->
+  <!-- ERROR: token non valido — mostra form email per recupero -->
   {#if view === 'error'}
-    <div class="bg-white rounded-xl shadow p-6 text-center">
-      <p class="text-4xl mb-3">😕</p>
-      <h1 class="text-lg font-bold text-gray-900 mb-2">Link non valido o mancante</h1>
-      <p class="text-gray-500 text-sm">
-        Hai bisogno del tuo link personale per prenotare uno slot.<br />
-        Contatta Michele su Telegram per riceverlo.
-      </p>
+    <div class="bg-white rounded-xl shadow p-6">
+      <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">{data.eventConfig.dayLabel}</p>
+      <h1 class="text-lg font-bold text-gray-900 mb-1">{data.eventConfig.name}</h1>
+      <p class="text-sm text-amber-600 mb-4">Link non valido o scaduto — accedi con la tua email.</p>
+      <form method="POST" action="?/emailLogin" class="space-y-3">
+        <input
+          type="email"
+          name="email"
+          placeholder="la-tua@email.it"
+          required
+          class="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+        />
+        {#if form?.emailError}
+          <p class="text-sm text-red-600">{form.emailError}</p>
+        {/if}
+        <button
+          type="submit"
+          class="w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
+        >
+          Accedi
+        </button>
+      </form>
     </div>
     {@render scheduleOverview()}
 
