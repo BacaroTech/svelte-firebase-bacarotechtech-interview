@@ -4,8 +4,28 @@
   import EventSchedule from '$lib/components/schedule/EventSchedule.svelte';
   import ScheduleSidebar from '$lib/components/schedule/ScheduleSidebar.svelte';
   import { getTalksAtTime } from '$lib/config/schedule';
+  import { browser } from '$app/environment';
+  import { collection, onSnapshot, query, where } from 'firebase/firestore';
+  import { dbClient } from '$lib/firebase/firebase.client';
 
   const { data, form }: { data: PageData; form: ActionData } = $props();
+
+  // Inizializzato dai dati SSR, poi aggiornato in real-time da Firestore
+  let slots = $state<InterviewSlot[]>(data.slots);
+
+  $effect(() => {
+    if (!browser || !dbClient) return;
+    const q = query(
+      collection(dbClient, 'slots'),
+      where('eventId', '==', data.eventId)
+    );
+    const unsubscribe = onSnapshot(q, snapshot => {
+      slots = snapshot.docs
+        .map(doc => ({ ...doc.data(), docId: doc.id } as InterviewSlot))
+        .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+    });
+    return unsubscribe;
+  });
 
   let selectedSlot = $state<InterviewSlot | null>(null);
   let view = $state<'slots' | 'confirmed' | 'error' | 'form' | 'schedule'>(
@@ -16,7 +36,7 @@
 
   const myBookedSlot = $derived(
     data.speaker
-      ? data.slots.find(s => s.speakerUid === data.speaker!.docId) ?? null
+      ? slots.find(s => s.speakerUid === data.speaker!.docId) ?? null
       : null
   );
 
@@ -32,9 +52,9 @@
   function slotHour(slot: InterviewSlot) {
     return new Date(slot.startTime).getHours();
   }
-  const colazioneSlots = $derived(data.slots.filter(s => slotHour(s) < 12));
-  const morningSlots   = $derived(data.slots.filter(s => { const h = slotHour(s); return h >= 12 && h < 14; }));
-  const afternoonSlots = $derived(data.slots.filter(s => slotHour(s) >= 14));
+  const colazioneSlots = $derived(slots.filter(s => slotHour(s) < 12));
+  const morningSlots   = $derived(slots.filter(s => { const h = slotHour(s); return h >= 12 && h < 14; }));
+  const afternoonSlots = $derived(slots.filter(s => slotHour(s) >= 14));
 
   async function book() {
     if (!selectedSlot) return;
