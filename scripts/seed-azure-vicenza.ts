@@ -25,18 +25,18 @@ const stato = JSON.parse(readFileSync(statoPath, 'utf-8'));
 
 // Definizione slot: [ora, minuti, durata minuti]
 const SLOT_DEFINITIONS = [
-    // Blocco mattina (12:30–13:30)
-    [12, 30, 12],
-    [12, 42, 12],
-    [12, 54, 12],
-    [13, 6, 12],
-    [13, 18, 12],
-    // Blocco pomeriggio (14:50–15:50)
-    [14, 50, 12],
-    [15, 2, 12],
-    [15, 14, 12],
-    [15, 26, 12],
-    [15, 38, 12],
+    // Blocco mattina (12:30–13:20, può sforare)
+    [12, 30, 10],
+    [12, 40, 10],
+    [12, 50, 10],
+    [13,  0, 10],
+    [13, 10, 10],
+    // Blocco pomeriggio (14:50–15:40, può sforare)
+    [14, 50, 10],
+    [15,  0, 10],
+    [15, 10, 10],
+    [15, 20, 10],
+    [15, 30, 10],
 ] as const;
 
 function makeIsoDate(hour: number, minute: number): string {
