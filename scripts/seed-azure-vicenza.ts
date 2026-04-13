@@ -17,7 +17,7 @@ const db = getFirestore();
 
 const BASE_URL = process.env.PUBLIC_BASE_URL ?? 'http://localhost:5173';
 const EVENT_ID = 'azure-vicenza';
-const EVENT_DATE = new Date('2026-04-17T00:00:00.000Z'); // Venerdì 17 aprile 2026
+const EVENT_DATE = '2026-04-17'; // Venerdì 17 aprile 2026 (ora locale italiana CEST = UTC+2)
 
 // Leggi stato.json
 const statoPath = resolve(process.cwd(), 'doc/stato.json');
@@ -40,13 +40,14 @@ const SLOT_DEFINITIONS = [
 ] as const;
 
 function makeIsoDate(hour: number, minute: number): string {
-    const d = new Date(EVENT_DATE);
-    d.setUTCHours(hour, minute, 0, 0);
-    return d.toISOString();
+    // Ora locale italiana (CEST = UTC+2) — es. 12:30+02:00 = 10:30Z
+    const hh = String(hour).padStart(2, '0');
+    const mm = String(minute).padStart(2, '0');
+    return `${EVENT_DATE}T${hh}:${mm}:00+02:00`;
 }
 
 async function seed() {
-    console.log(`\n🌱 Seed Azure Vicenza — ${EVENT_DATE.toDateString()}\n`);
+    console.log(`\n🌱 Seed Azure Vicenza — ${EVENT_DATE} (ora locale CEST)\n`);
 
     // Pulizia slot esistenti per questo evento
     const existingSlots = await db.collection('slots').where('eventId', '==', EVENT_ID).get();
