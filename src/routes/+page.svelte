@@ -1,8 +1,10 @@
 <script lang="ts">
-  import CalendarInterview from "$lib/components/slots/CalendarInterview.svelte";  
+  import { goto } from '$app/navigation';
+  import { onMount } from 'svelte';
+
+  onMount(() => {
+    goto('/admin/azure-vicenza');
+  });
 </script>
 
-<div class="w-full ">
-    
-  <CalendarInterview />  
-</div>
+<p class="text-center text-gray-400 mt-20 text-sm">Caricamento...</p>
