@@ -2,6 +2,8 @@
   import type { PageData, ActionData } from './$types';
   import type { InterviewSlot } from '$lib/type/slots';
   import EventSchedule from '$lib/components/schedule/EventSchedule.svelte';
+  import ScheduleSidebar from '$lib/components/schedule/ScheduleSidebar.svelte';
+  import { getTalksAtTime } from '$lib/config/schedule';
 
   const { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -89,6 +91,21 @@
           {isMe ? '✓ Il tuo slot' : available ? (preferred ? '★ Preferenza' : 'Libero') : (slot.speakerName ?? 'Occupato')}
         </span>
       </div>
+      {#if available || isMe}
+        {@const talks = getTalksAtTime(slot.startTime)}
+        {#if talks.length > 0}
+          <div class="mt-1.5 flex flex-wrap gap-1">
+            {#each talks as talk (talk.id)}
+              <span class="text-xs px-1.5 py-0.5 rounded-full
+                {data.speaker?.name && talk.speakers.some(s => s.toLowerCase().includes(data.speaker!.name.toLowerCase()))
+                  ? 'bg-amber-100 text-amber-700 font-semibold'
+                  : 'bg-gray-100 text-gray-500'}">
+                {talk.room}: {talk.speakers.length > 0 ? talk.speakers[0] : talk.title.slice(0, 30)}
+              </span>
+            {/each}
+          </div>
+        {/if}
+      {/if}
     </button>
   {:else}
     <!-- Read-only row -->
@@ -242,7 +259,9 @@
 
   <!-- SLOTS: lista slot interattivi (speaker autenticato) -->
   {:else if view === 'slots'}
-    <div class="space-y-4">
+    <div class="md:grid md:grid-cols-[1fr_280px] md:gap-6">
+      <!-- Left column: slot list -->
+      <div class="space-y-4">
       <!-- Header -->
       <div class="bg-white rounded-xl shadow p-4">
         <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">{data.eventConfig.dayLabel}</p>
@@ -310,6 +329,16 @@
           </button>
         </div>
       {/if}
+      </div>
+      <!-- Right column: sidebar (desktop only) -->
+      <div class="hidden md:block">
+        <div class="bg-white rounded-xl shadow p-3 sticky top-4 max-h-[calc(100vh-4rem)] overflow-y-auto">
+          <ScheduleSidebar
+            activeSlotTime={selectedSlot?.startTime}
+            highlightSpeakerName={data.speaker?.name ?? ''}
+          />
+        </div>
+      </div>
     </div>
 
   {:else if view === 'schedule'}
