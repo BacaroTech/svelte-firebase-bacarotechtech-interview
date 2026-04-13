@@ -18,7 +18,7 @@ let mockSlots: any[] = [
     docId: 'doc3', id: '3', eventId: 'evt1',
     startTime: '2025-10-10T11:00:00.000Z',
     endTime: '2025-10-10T11:15:00.000Z', // 15 min - Questo risulterà piccolo
-    status: 'CANCELED', speakerName: 'Old Booking', speakerUid: 'uid2', bookedAt: null,
+    status: 'ANNULLATO', speakerName: 'Old Booking', speakerUid: 'uid2', bookedAt: null,
   },
   {
     docId: 'doc4', id: '4', eventId: 'evt1',
