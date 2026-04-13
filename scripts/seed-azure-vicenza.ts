@@ -25,6 +25,10 @@ const stato = JSON.parse(readFileSync(statoPath, 'utf-8'));
 
 // Definizione slot: [ora, minuti, durata minuti]
 const SLOT_DEFINITIONS = [
+    // Blocco colazione (10:20–10:50, può sforare)
+    [10, 20, 10],
+    [10, 30, 10],
+    [10, 40, 10],
     // Blocco mattina (12:30–13:20, può sforare)
     [12, 30, 10],
     [12, 40, 10],
@@ -38,6 +42,9 @@ const SLOT_DEFINITIONS = [
     [15, 20, 10],
     [15, 30, 10],
 ] as const;
+
+const COLAZIONE_COUNT = 3;
+const MORNING_COUNT = 5;
 
 function makeIsoDate(hour: number, minute: number): string {
     // Ora locale italiana (CEST = UTC+2) — es. 12:30+02:00 = 10:30Z
@@ -60,8 +67,8 @@ async function seed() {
 
     // Crea i doc ref per gli slot (così abbiamo gli ID prima di scrivere)
     const slotRefs = SLOT_DEFINITIONS.map(() => db.collection('slots').doc());
-    const morningSlotIds = slotRefs.slice(0, 5).map(r => r.id);
-    const afternoonSlotIds = slotRefs.slice(5).map(r => r.id);
+    const morningSlotIds = slotRefs.slice(COLAZIONE_COUNT, COLAZIONE_COUNT + MORNING_COUNT).map(r => r.id);
+    const afternoonSlotIds = slotRefs.slice(COLAZIONE_COUNT + MORNING_COUNT).map(r => r.id);
 
     // Scrivi gli slot in batch
     const slotBatch = db.batch();

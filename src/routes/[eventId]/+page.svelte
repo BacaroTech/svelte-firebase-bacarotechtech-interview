@@ -25,9 +25,13 @@
     return data.speaker?.preferredSlots?.includes(slot.docId) ?? false;
   }
 
-  // Raggruppa gli slot per blocco (mattina = prima metà, pomeriggio = seconda)
-  const morningSlots = $derived(data.slots.slice(0, 5));
-  const afternoonSlots = $derived(data.slots.slice(5));
+  // Raggruppa per ora locale: colazione <12, mattina 12-14, pomeriggio >=14
+  function slotHour(slot: InterviewSlot) {
+    return new Date(slot.startTime).getHours();
+  }
+  const colazioneSlots = $derived(data.slots.filter(s => slotHour(s) < 12));
+  const morningSlots   = $derived(data.slots.filter(s => { const h = slotHour(s); return h >= 12 && h < 14; }));
+  const afternoonSlots = $derived(data.slots.filter(s => slotHour(s) >= 14));
 
   async function book() {
     if (!selectedSlot) return;
@@ -104,8 +108,19 @@
   <div class="bg-white rounded-xl shadow p-4 space-y-4">
     <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Programmazione interviste</h2>
 
+    {#if colazioneSlots.length > 0}
     <div>
-      <p class="text-xs text-gray-400 mb-2">☀️ Blocco Mattina — 12:30 / 13:30</p>
+      <p class="text-xs text-gray-400 mb-2">☕ Colazione — 10:20 / 10:50</p>
+      <div class="space-y-1.5">
+        {#each colazioneSlots as slot (slot.docId)}
+          {@render slotRow(slot, false)}
+        {/each}
+      </div>
+    </div>
+    {/if}
+
+    <div>
+      <p class="text-xs text-gray-400 mb-2">☀️ Mattina — 12:30 / 13:20</p>
       <div class="space-y-1.5">
         {#each morningSlots as slot (slot.docId)}
           {@render slotRow(slot, false)}
@@ -114,7 +129,7 @@
     </div>
 
     <div>
-      <p class="text-xs text-gray-400 mb-2">🌤 Blocco Pomeriggio — 14:50 / 15:50</p>
+      <p class="text-xs text-gray-400 mb-2">🌤 Pomeriggio — 14:50 / 15:40</p>
       <div class="space-y-1.5">
         {#each afternoonSlots as slot (slot.docId)}
           {@render slotRow(slot, false)}
@@ -219,9 +234,21 @@
         </div>
       {/if}
 
+      <!-- Colazione -->
+      {#if colazioneSlots.length > 0}
+      <div>
+        <p class="text-xs text-gray-400 px-1 mb-2">☕ Colazione — 10:20 / 10:50</p>
+        <div class="space-y-2">
+          {#each colazioneSlots as slot (slot.docId)}
+            {@render slotRow(slot, true)}
+          {/each}
+        </div>
+      </div>
+      {/if}
+
       <!-- Mattina -->
       <div>
-        <p class="text-xs text-gray-400 px-1 mb-2">☀️ Blocco Mattina — 12:30 / 13:30</p>
+        <p class="text-xs text-gray-400 px-1 mb-2">☀️ Mattina — 12:30 / 13:20</p>
         <div class="space-y-2">
           {#each morningSlots as slot (slot.docId)}
             {@render slotRow(slot, true)}
@@ -231,7 +258,7 @@
 
       <!-- Pomeriggio -->
       <div>
-        <p class="text-xs text-gray-400 px-1 mb-2">🌤 Blocco Pomeriggio — 14:50 / 15:50</p>
+        <p class="text-xs text-gray-400 px-1 mb-2">🌤 Pomeriggio — 14:50 / 15:40</p>
         <div class="space-y-2">
           {#each afternoonSlots as slot (slot.docId)}
             {@render slotRow(slot, true)}

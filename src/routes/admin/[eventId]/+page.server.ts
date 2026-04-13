@@ -53,16 +53,20 @@ export const actions: Actions = {
             .where('eventId', '==', eventId)
             .get();
 
-        const sortedSlotIds = slotsSnap.docs
-            .sort((a, b) => {
-                const ta = (a.data().startTime as string) ?? '';
-                const tb = (b.data().startTime as string) ?? '';
-                return ta.localeCompare(tb);
-            })
-            .map(d => d.id);
+        // Raggruppa per ora UTC: colazione <10Z, mattina 10-12Z, pomeriggio >=12Z
+        // (CEST = UTC+2 → 10:20 CEST = 08:20Z, 12:30 CEST = 10:30Z, 14:50 CEST = 12:50Z)
+        const sorted = slotsSnap.docs.sort((a, b) => {
+            const ta = (a.data().startTime as string) ?? '';
+            const tb = (b.data().startTime as string) ?? '';
+            return ta.localeCompare(tb);
+        });
 
-        const morningSlotIds = sortedSlotIds.slice(0, 5);
-        const afternoonSlotIds = sortedSlotIds.slice(5, 10);
+        const morningSlotIds = sorted
+            .filter(d => { const h = new Date(d.data().startTime).getUTCHours(); return h >= 10 && h < 12; })
+            .map(d => d.id);
+        const afternoonSlotIds = sorted
+            .filter(d => new Date(d.data().startTime).getUTCHours() >= 12)
+            .map(d => d.id);
 
         // Mappa preferenze dal JSON
         const prefsMap: Record<string, { slot: string; note: string }> = {};
