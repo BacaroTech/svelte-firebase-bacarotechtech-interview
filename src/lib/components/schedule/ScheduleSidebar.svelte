@@ -2,6 +2,27 @@
 <script lang="ts">
   import { SESSIONS, type TalkSession } from '$lib/config/schedule';
 
+  // Pre-computed numeric timestamps per group — avoids repeated Date parsing inside $derived
+  type GroupEntry = { key: string; sessions: TalkSession[]; items: { session: TalkSession; startMs: number; endMs: number }[] };
+  const groupedMs: GroupEntry[] = (() => {
+    const map = new Map<string, TalkSession[]>();
+    for (const s of SESSIONS) {
+      if (!map.has(s.startTime)) map.set(s.startTime, []);
+      map.get(s.startTime)!.push(s);
+    }
+    return [...map.entries()]
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([key, sessions]) => ({
+        key,
+        sessions,
+        items: sessions.map(s => ({
+          session: s,
+          startMs: new Date(s.startTime).getTime(),
+          endMs:   new Date(s.endTime).getTime(),
+        })),
+      }));
+  })();
+
   const {
     activeSlotTime = undefined,
     highlightSpeakerName = ''
@@ -36,30 +57,24 @@
     );
   }
 
-  const grouped: [string, TalkSession[]][] = (() => {
-    const map = new Map<string, TalkSession[]>();
-    for (const s of SESSIONS) {
-      if (!map.has(s.startTime)) map.set(s.startTime, []);
-      map.get(s.startTime)!.push(s);
-    }
-    return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-  })();
+  // Flat [key, sessions] pairs for template iteration
+  const grouped = groupedMs.map(({ key, sessions }) => [key, sessions] as [string, TalkSession[]]);
 
-  // timeKey of the group that contains activeSlotTime
+  // Finds which time-group the active slot belongs to — no Date parsing at call time
   const activeTimeKey = $derived((() => {
     if (!activeSlotTime) return null;
     const t = new Date(activeSlotTime).getTime();
-    for (const [key, sessions] of grouped) {
-      if (sessions.some(s =>
-        !s.isService &&
-        new Date(s.startTime).getTime() <= t &&
-        t < new Date(s.endTime).getTime()
+    if (isNaN(t)) return null;
+    for (const { key, items } of groupedMs) {
+      if (items.some(({ session, startMs, endMs }) =>
+        !session.isService && startMs <= t && t < endMs
       )) return key;
     }
     return null;
   })());
 
-  let blockEls: Record<string, HTMLElement | undefined> = {};
+  // $state so Svelte tracks bind:this assignments and $effect re-runs when refs are populated
+  let blockEls: Record<string, HTMLElement | undefined> = $state({});
 
   $effect(() => {
     const key = activeTimeKey;
