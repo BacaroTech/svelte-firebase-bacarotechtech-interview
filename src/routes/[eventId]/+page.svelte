@@ -35,6 +35,33 @@
   );
   let bookingError = $state('');
   let isBooking = $state(false);
+  let showChangeForm = $state(false);
+  let changeRequestedSlotId = $state('');
+  let changeNote = $state('');
+  let isRequestingChange = $state(false);
+  let changeRequestError = $state('');
+  let changeRequestSent = $state(false);
+
+  async function submitChangeRequest() {
+    if (!changeRequestedSlotId) return;
+    isRequestingChange = true;
+    changeRequestError = '';
+    const token = new URLSearchParams(window.location.search).get('token') ?? '';
+    const res = await fetch('/api/slots/request-change', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, requestedSlotId: changeRequestedSlotId, note: changeNote })
+    });
+    if (res.ok) {
+      changeRequestSent = true;
+      showChangeForm = false;
+    } else {
+      const err = await res.json();
+      changeRequestError = err.error ?? 'Errore durante la richiesta';
+    }
+    isRequestingChange = false;
+  }
+
   let isLive = $state(false);
   let onboardingDismissed = $state(
     typeof sessionStorage !== 'undefined'
@@ -432,6 +459,57 @@
           <p class="text-green-700 font-semibold">
             ✅ Sei già prenotato per le {formatTime(myBookedSlot.startTime)}
           </p>
+
+          {#if changeRequestSent}
+            <p class="text-sm text-gray-500 mt-2">
+              ✅ Richiesta inviata a Michele. Ti risponderà su Telegram <strong>@michele_scarpa</strong>.
+            </p>
+          {:else if showChangeForm}
+            <div class="mt-3 text-left space-y-2">
+              <label for="change-slot-select" class="block text-xs text-gray-600 font-medium">Slot che preferiresti:</label>
+              <select
+                id="change-slot-select"
+                bind:value={changeRequestedSlotId}
+                class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              >
+                <option value="">— Seleziona uno slot —</option>
+                {#each slots.filter(s => s.status === 'AVAILABLE') as s (s.docId)}
+                  <option value={s.docId}>{formatTime(s.startTime)} – {formatTime(s.endTime)}</option>
+                {/each}
+              </select>
+              <textarea
+                bind:value={changeNote}
+                placeholder="Note per Michele (opzionale)"
+                rows="2"
+                class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm resize-none"
+              ></textarea>
+              {#if changeRequestError}
+                <p class="text-xs text-red-600">{changeRequestError}</p>
+              {/if}
+              <div class="flex gap-2">
+                <button
+                  onclick={submitChangeRequest}
+                  disabled={!changeRequestedSlotId || isRequestingChange}
+                  class="flex-1 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
+                >
+                  {isRequestingChange ? 'Invio...' : 'Invia richiesta'}
+                </button>
+                <button
+                  onclick={() => { showChangeForm = false; changeRequestError = ''; }}
+                  class="px-3 py-2 text-sm text-gray-500 hover:text-gray-700"
+                >
+                  Annulla
+                </button>
+              </div>
+            </div>
+          {:else}
+            <button
+              onclick={() => { showChangeForm = true; }}
+              class="mt-2 text-xs text-indigo-600 hover:text-indigo-800 underline"
+            >
+              Vuoi cambiare slot? →
+            </button>
+          {/if}
         </div>
       {/if}
 
