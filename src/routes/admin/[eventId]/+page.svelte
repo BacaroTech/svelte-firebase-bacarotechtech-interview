@@ -16,6 +16,26 @@
   let addError = $state('');
   let isAdding = $state(false);
   let isReseeding = $state(false);
+  let isTestingNotification = $state(false);
+  let testNotifResult = $state('');
+
+  async function sendTestNotification() {
+    const token = localStorage.getItem('fcm_token');
+    if (!token) {
+      testNotifResult = '❌ Nessun token FCM in localStorage — abilita prima le notifiche (campanella)';
+      return;
+    }
+    isTestingNotification = true;
+    testNotifResult = '';
+    const res = await fetch('/api/notifications/test', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, email: 'scarpa.michele.90@gmail.com' })
+    });
+    const data = await res.json();
+    testNotifResult = res.ok ? '✅ ' + data.message : '❌ ' + data.error;
+    isTestingNotification = false;
+  }
 
   const STATUS_OPTIONS = ['AVAILABLE', 'BOOKED', 'DONE', 'PROBLEMA', 'ANNULLATO'] as const;
 
@@ -204,6 +224,25 @@
         <p class="text-sm text-gray-400 text-center py-4">Nessuno speaker ancora. Aggiungine uno!</p>
       {/if}
     </div>
+  </section>
+
+  <!-- TEST NOTIFICA -->
+  <section class="bg-white rounded-xl shadow p-4 border border-blue-100">
+    <h2 class="text-base font-semibold text-gray-900 mb-1">Test notifica push</h2>
+    <p class="text-sm text-gray-500 mb-3">
+      Invia una notifica di test al tuo browser. Assicurati di aver abilitato le notifiche (campanella in alto).
+    </p>
+    {#if testNotifResult}
+      <p class="text-sm mb-3 {testNotifResult.startsWith('✅') ? 'text-green-700' : 'text-red-600'}">{testNotifResult}</p>
+    {/if}
+    <button
+      type="button"
+      onclick={sendTestNotification}
+      disabled={isTestingNotification}
+      class="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500 disabled:opacity-50"
+    >
+      {isTestingNotification ? 'Invio...' : '🔔 Invia notifica di test'}
+    </button>
   </section>
 
   <!-- RESEED SPEAKER -->

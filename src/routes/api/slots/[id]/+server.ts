@@ -23,7 +23,26 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
     }
 
     try {
-        await db.collection('slots').doc(id).update({ status: body.status });
+        if (body.status === 'AVAILABLE') {
+            // Leggi lo slot per trovare lo speaker da resettare
+            const slotDoc = await db.collection('slots').doc(id).get();
+            const currentSpeakerUid = slotDoc.data()?.speakerUid as string | null;
+
+            await db.collection('slots').doc(id).update({
+                status: 'AVAILABLE',
+                speakerUid: null,
+                speakerName: null,
+                bookedAt: null
+            });
+
+            // Resetta lo speaker a pending se era prenotato su questo slot
+            if (currentSpeakerUid) {
+                await db.collection('speakers').doc(currentSpeakerUid).update({ status: 'pending' });
+            }
+        } else {
+            await db.collection('slots').doc(id).update({ status: body.status });
+        }
+
         return json({ message: 'Status aggiornato' }, { status: 200 });
     } catch (e: any) {
         return json({ error: 'Errore: ' + e.message }, { status: 500 });

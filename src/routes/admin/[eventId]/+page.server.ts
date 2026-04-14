@@ -122,6 +122,18 @@ export const actions: Actions = {
 
         await createBatch.commit();
 
+        // Reset tutti gli slot dell'evento: AVAILABLE + pulisci campi booking
+        const resetBatch = adminFirestore.batch();
+        slotsSnap.docs.forEach(doc => {
+            resetBatch.update(doc.ref, {
+                status: 'AVAILABLE',
+                speakerUid: null,
+                speakerName: null,
+                bookedAt: null
+            });
+        });
+        await resetBatch.commit();
+
         return { seedLinks: links, seedCount: stato.partecipanti.length };
     }
 };
