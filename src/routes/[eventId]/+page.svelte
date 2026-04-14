@@ -136,17 +136,33 @@
     isBooking = false;
   }
 
+  function toGCalDate(iso: string): string {
+    const d = new Date(iso);
+    return d.toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z';
+  }
+
   function buildGCalUrl(slot: InterviewSlot): string {
-    const start = slot.startTime.replace(/[-:]/g, '').replace('.000Z', 'Z');
-    const end   = slot.endTime.replace(/[-:]/g, '').replace('.000Z', 'Z');
     const params = new URLSearchParams({
       action: 'TEMPLATE',
       text: 'Intervista Bacarotech — Global Azure Veneto 2026',
-      dates: `${start}/${end}`,
       details: 'Chiacchierata free-style con Michele di Bacarotech. 5-7 minuti, senza copione.',
-      location: 'Area divanetti, vicino alla reception — cerca la DJI Action su cavalletto'
+      location: 'Area divanetti, vicino alla reception — cerca la DJI Action su cavalletto',
+      add: 'scarpa.michele.90@gmail.com'
     });
-    return `https://calendar.google.com/calendar/render?${params.toString()}`;
+    // dates contiene '/' che non deve essere codificato da URLSearchParams
+    return `https://calendar.google.com/calendar/render?${params.toString()}&dates=${toGCalDate(slot.startTime)}/${toGCalDate(slot.endTime)}`;
+  }
+
+  function buildOutlookUrl(slot: InterviewSlot): string {
+    const params = new URLSearchParams({
+      subject: 'Intervista Bacarotech — Global Azure Veneto 2026',
+      startdt: slot.startTime,
+      enddt: slot.endTime,
+      body: 'Chiacchierata free-style con Michele di Bacarotech. 5-7 minuti, senza copione.',
+      location: 'Area divanetti, vicino alla reception — cerca la DJI Action su cavalletto',
+      to: 'scarpa.michele.90@gmail.com'
+    });
+    return `https://outlook.live.com/calendar/0/deeplink/compose?${params.toString()}`;
   }
 </script>
 
@@ -346,14 +362,24 @@
 
       <!-- Add to calendar -->
       {#if selectedSlot}
-        <a
-          href={buildGCalUrl(selectedSlot)}
-          target="_blank"
-          rel="noopener noreferrer"
-          class="mt-4 inline-block rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-100"
-        >
-          📅 Aggiungi al calendario
-        </a>
+        <div class="mt-4 flex flex-wrap justify-center gap-2">
+          <a
+            href={buildGCalUrl(selectedSlot)}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-100"
+          >
+            📅 Google Calendar
+          </a>
+          <a
+            href={buildOutlookUrl(selectedSlot)}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100"
+          >
+            📅 Outlook
+          </a>
+        </div>
       {/if}
 
       <!-- Info logistiche -->
