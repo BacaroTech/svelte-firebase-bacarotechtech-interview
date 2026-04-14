@@ -4,14 +4,15 @@ import { error, redirect, fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import type { InterviewSlot, Speaker } from '$lib/type/slots';
 
-export const load: PageServerLoad = async ({ params, url }) => {
+export const load: PageServerLoad = async ({ params, url, cookies }) => {
     const { eventId } = params;
 
     if (!VALID_EVENT_IDS.includes(eventId as any)) {
         error(404, 'Evento non trovato');
     }
 
-    const token = url.searchParams.get('token');
+    // Prova prima dall'URL, poi dal cookie
+    const token = url.searchParams.get('token') ?? cookies.get('__speaker_token');
 
     const slotsSnapshot = await adminFirestore
         .collection('slots')

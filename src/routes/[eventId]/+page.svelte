@@ -34,6 +34,22 @@
   let bookingError = $state('');
   let isBooking = $state(false);
 
+  // Easter egg per admin: 5 click sul titolo in 2 secondi
+  let clickCount = $state(0);
+  let lastClickTime = $state(0);
+  function handleAdminClick() {
+    const now = Date.now();
+    if (now - lastClickTime < 2000) {
+      clickCount++;
+    } else {
+      clickCount = 1;
+    }
+    lastClickTime = now;
+    if (clickCount >= 5) {
+      window.location.href = '/admin/login';
+    }
+  }
+
   const myBookedSlot = $derived(
     data.speaker
       ? slots.find(s => s.speakerUid === data.speaker!.docId) ?? null
@@ -212,7 +228,13 @@
   {#if view === 'error'}
     <div class="bg-white rounded-xl shadow p-6">
       <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">{data.eventConfig.dayLabel}</p>
-      <h1 class="text-lg font-bold text-gray-900 mb-1">{data.eventConfig.name}</h1>
+      <button 
+        type="button" 
+        onclick={handleAdminClick}
+        class="text-left block w-full focus:outline-none"
+      >
+        <h1 class="text-lg font-bold text-gray-900 mb-1">{data.eventConfig.name}</h1>
+      </button>
       <p class="text-sm text-amber-600 mb-4">Link non valido o scaduto — accedi con la tua email.</p>
       <form method="POST" action="?/emailLogin" class="space-y-3">
         <input
@@ -255,7 +277,13 @@
   {:else if view === 'form'}
     <div class="bg-white rounded-xl shadow p-6">
       <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">{data.eventConfig.dayLabel}</p>
-      <h1 class="text-lg font-bold text-gray-900 mb-1">{data.eventConfig.name}</h1>
+      <button 
+        type="button" 
+        onclick={handleAdminClick}
+        class="text-left block w-full focus:outline-none"
+      >
+        <h1 class="text-lg font-bold text-gray-900 mb-1">{data.eventConfig.name}</h1>
+      </button>
       <p class="text-sm text-gray-500 mb-5">Inserisci l'email con cui ti sei registrato all'evento per accedere al tuo spazio.</p>
       <form method="POST" action="?/emailLogin" class="space-y-3">
         <input
@@ -286,7 +314,13 @@
       <!-- Header -->
       <div class="bg-white rounded-xl shadow p-4">
         <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">{data.eventConfig.dayLabel}</p>
-        <h1 class="text-lg font-bold text-gray-900">{data.eventConfig.name}</h1>
+        <button 
+          type="button" 
+          onclick={handleAdminClick}
+          class="text-left block w-full focus:outline-none"
+        >
+          <h1 class="text-lg font-bold text-gray-900">{data.eventConfig.name}</h1>
+        </button>
         {#if data.speaker}
           <p class="text-sm text-gray-600 mt-1">Ciao <strong>{data.speaker.name}</strong> 👋</p>
           {#if data.speaker.talk}
