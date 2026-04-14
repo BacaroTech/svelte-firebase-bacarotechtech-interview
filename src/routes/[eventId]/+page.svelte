@@ -5,6 +5,7 @@
   import ScheduleSidebar from '$lib/components/schedule/ScheduleSidebar.svelte';
   import { getTalksAtTime } from '$lib/config/schedule';
   import { browser } from '$app/environment';
+  import { invalidateAll } from '$app/navigation';
   import { collection, onSnapshot, query, where } from 'firebase/firestore';
   import { dbClient } from '$lib/firebase/firebase.client';
   import icon from '$lib/assets/icon.png';
@@ -21,12 +22,18 @@
       collection(dbClient, 'slots'),
       where('eventId', '==', data.eventId)
     );
-    const unsubscribe = onSnapshot(q, snapshot => {
-      isLive = true;
-      slots = snapshot.docs
-        .map(doc => ({ ...doc.data(), docId: doc.id } as InterviewSlot))
-        .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
-    });
+    const unsubscribe = onSnapshot(
+      q,
+      snapshot => {
+        isLive = true;
+        slots = snapshot.docs
+          .map(doc => ({ ...doc.data(), docId: doc.id } as InterviewSlot))
+          .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+      },
+      err => {
+        console.error('[onSnapshot] errore:', err.code, err.message);
+      }
+    );
     return unsubscribe;
   });
 
@@ -64,6 +71,13 @@
   }
 
   let isLive = $state(false);
+  let isRefreshing = $state(false);
+
+  async function refreshSlots() {
+    isRefreshing = true;
+    await invalidateAll();
+    isRefreshing = false;
+  }
   let onboardingDismissed = $state(
     typeof sessionStorage !== 'undefined'
       ? sessionStorage.getItem('onboarding_dismissed') === '1'
@@ -478,12 +492,24 @@
           {#if data.speaker.talk}
             <p class="text-xs text-gray-400 mt-0.5">"{data.speaker.talk}"</p>
           {/if}
-          {#if isLive}
-            <p class="flex items-center gap-1 text-xs text-green-500 mt-1">
-              <span class="inline-block w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-              Aggiornamento in tempo reale
-            </p>
-          {/if}
+          <div class="flex items-center gap-2 mt-1">
+            <button
+              type="button"
+              onclick={refreshSlots}
+              disabled={isRefreshing}
+              class="flex items-center gap-1 text-xs text-gray-400 hover:text-indigo-600 disabled:opacity-50 transition-colors"
+              title="Aggiorna disponibilità"
+            >
+              <span class="{isRefreshing ? 'animate-spin' : ''}">↻</span>
+              {isRefreshing ? 'Aggiornamento...' : 'Aggiorna'}
+            </button>
+            {#if isLive}
+              <span class="flex items-center gap-1 text-xs text-green-500">
+                <span class="inline-block w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+                live
+              </span>
+            {/if}
+          </div>
         {/if}
       </div>
 
