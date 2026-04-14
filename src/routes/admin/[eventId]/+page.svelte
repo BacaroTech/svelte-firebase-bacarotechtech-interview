@@ -1,10 +1,29 @@
 <script lang="ts">
   import type { PageData, ActionData } from './$types';
   import type { InterviewSlot, Speaker } from '$lib/type/slots';
+  import { browser } from '$app/environment';
+  import { collection, onSnapshot, query, where } from 'firebase/firestore';
+  import { dbClient } from '$lib/firebase/firebase.client';
+
   const { data, form }: { data: PageData; form: ActionData } = $props();
 
   let slots = $state(data.slots);
   let speakers = $state(data.speakers);
+
+  $effect(() => {
+    if (!browser || !dbClient) return;
+    const q = query(collection(dbClient, 'slots'), where('eventId', '==', data.eventId));
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        slots = snapshot.docs
+          .map(doc => ({ ...doc.data(), docId: doc.id } as InterviewSlot))
+          .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+      },
+      (err) => console.error('[onSnapshot] admin slots:', err)
+    );
+    return unsubscribe;
+  });
   let showAddForm = $state(false);
 
   // Form aggiungi speaker
