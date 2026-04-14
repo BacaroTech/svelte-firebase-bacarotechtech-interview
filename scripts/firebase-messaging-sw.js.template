@@ -1,5 +1,5 @@
-importScripts('https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/10.12.4/firebase-messaging-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/12.3.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/12.3.0/firebase-messaging-compat.js');
 firebase.initializeApp({
   apiKey: '__PUBLIC_FIREBASE_API_KEY__',
   authDomain: '__PUBLIC_FIREBASE_AUTH_DOMAIN__',
