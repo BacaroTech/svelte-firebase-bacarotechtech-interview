@@ -8,6 +8,7 @@
   import { collection, onSnapshot, query, where } from 'firebase/firestore';
   import { dbClient } from '$lib/firebase/firebase.client';
   import icon from '$lib/assets/icon.png';
+  import InterviewNotification from '$lib/components/notification/InterviewNotification.svelte';
 
   const { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -467,7 +468,13 @@
           <h1 class="text-lg font-bold text-gray-900">{data.eventConfig.name}</h1>
         </button>
         {#if data.speaker}
-          <p class="text-sm text-gray-600 mt-1">Ciao <strong>{data.speaker.name}</strong> 👋</p>
+          <div class="flex items-center justify-between mt-1">
+            <p class="text-sm text-gray-600">Ciao <strong>{data.speaker.name}</strong> 👋</p>
+            <InterviewNotification role="speaker" />
+          </div>
+          {#if data.speaker.email}
+            <p class="text-xs text-gray-400 mt-0.5">📧 {data.speaker.email}</p>
+          {/if}
           {#if data.speaker.talk}
             <p class="text-xs text-gray-400 mt-0.5">"{data.speaker.talk}"</p>
           {/if}
@@ -485,6 +492,25 @@
           <p class="text-green-700 font-semibold">
             ✅ Sei già prenotato per le {formatTime(myBookedSlot.startTime)}
           </p>
+
+          <div class="flex flex-wrap justify-center gap-2 mt-3">
+            <a
+              href={buildGCalUrl(myBookedSlot)}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100"
+            >
+              📅 Google Calendar
+            </a>
+            <a
+              href={buildOutlookUrl(myBookedSlot)}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100"
+            >
+              📅 Outlook
+            </a>
+          </div>
 
           {#if changeRequestSent}
             <p class="text-sm text-gray-500 mt-2">
