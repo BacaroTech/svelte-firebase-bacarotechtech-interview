@@ -1,62 +1,49 @@
 <script lang="ts">
   import type { InterviewSlot } from "$lib/type/slots";
   import { onMount } from "svelte";
-
+  import { collection, onSnapshot, query } from "firebase/firestore";
+  import { dbClient } from "$lib/firebase/firebase.client";
   import CalendarSlot from "./CalendarSlot.svelte";
 
   let slots = $state([] as InterviewSlot[]);
   let slotsLoading = $state(true);
   let slotsError = $state("");
-  async function fetchSlots() {
-    slotsLoading = true;
-    slotsError = "";
-    try {
-      const response = await fetch("/api/slots");
-      if (response.ok) {
-        debugger
-        let _slots: InterviewSlot[] = await response.json();
-         
-        _slots = _slots.map((slot: any) => {
-          const localStartTime = new Date(slot.startTime);
-          const localEndTime = new Date(slot.endTime);
-
-    // Formatta l'ora per l'Italia
-    const formattedStartTime = localStartTime.toLocaleTimeString('it-IT', {
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-    const formattedEndTime = localEndTime.toLocaleTimeString('it-IT', {
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-          const _slot: InterviewSlot = {
-            ...slot,
-            startTimeString: formattedStartTime,
-            endTimeString: formattedEndTime
-          }
-          return _slot;
-        })
-        slots = _slots.filter(
-          (slot) => isValid(slot.startTime) && isValid(slot.endTime)
-        );
-
-        
-        slots.sort(
-          (a, b) =>
-            new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
-        );
-      } else {
-        slotsError = "Errore nel caricamento degli slot.";
-      }
-    } catch (e: any) {
-      slotsError = "Errore di rete: " + e.message;
-    } finally {
-      slotsLoading = false;
-    }
-  }
 
   onMount(() => {
-    fetchSlots();
+    if (!dbClient) return;
+    slotsLoading = true;
+
+    const unsubscribe = onSnapshot(
+      query(collection(dbClient, "slots")),
+      (snapshot) => {
+        let _slots: InterviewSlot[] = snapshot.docs
+          .map((doc) => {
+            const data = doc.data();
+            const startDate = data.startTime?.toDate?.() ?? new Date(data.startTime);
+            const endDate = data.endTime?.toDate?.() ?? new Date(data.endTime);
+            return {
+              ...data,
+              docId: doc.id,
+              startTime: startDate.toISOString(),
+              endTime: endDate.toISOString(),
+              startTimeString: startDate.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }),
+              endTimeString: endDate.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }),
+            } as InterviewSlot;
+          })
+          .filter((slot) => isValid(slot.startTime) && isValid(slot.endTime))
+          .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+
+        slots = _slots;
+        slotsLoading = false;
+      },
+      (error) => {
+        console.error("[onSnapshot] slots error:", error);
+        slotsError = "Errore nel caricamento degli slot.";
+        slotsLoading = false;
+      }
+    );
+
+    return unsubscribe;
   });
 
   function isValid(startTime: string | null | undefined) {
