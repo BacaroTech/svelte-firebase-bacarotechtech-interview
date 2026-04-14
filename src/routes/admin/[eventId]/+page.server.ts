@@ -8,9 +8,12 @@ import { v4 as uuidv4 } from 'uuid';
 import statoAzure from '../../../../doc/stato.json';
 
 export const load: PageServerLoad = async ({ params }) => {
+    console.log("Admin page load - eventId:", params.eventId);
     const { eventId } = params;
 
     if (!VALID_EVENT_IDS.includes(eventId as any)) {
+                console.warn(`Evento non valido: ${eventId}`);
+
         error(404, 'Evento non trovato');
     }
 
@@ -27,7 +30,7 @@ export const load: PageServerLoad = async ({ params }) => {
         .map(doc => ({ ...doc.data(), docId: doc.id } as Speaker));
 
     const eventConfig = EVENT_CONFIG[eventId as keyof typeof EVENT_CONFIG];
-    const baseUrl = env.PUBLIC_BASE_URL ?? 'http://localhost:5173';
+    const baseUrl = env.BASE_URL ?? 'http://localhost:5173';
 
     return { slots, speakers, eventId, eventConfig, baseUrl };
 };

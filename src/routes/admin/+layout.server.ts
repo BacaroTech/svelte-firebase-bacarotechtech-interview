@@ -2,6 +2,7 @@ import { redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ locals, url }) => {
+    console.log('Admin layout load - isAdmin:', locals.isAdmin, 'url:', url.pathname);
     if (!locals.isAdmin && url.pathname !== '/admin/login') {
         redirect(302, '/admin/login');
     }
