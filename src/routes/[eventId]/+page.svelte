@@ -7,6 +7,7 @@
   import { browser } from '$app/environment';
   import { collection, onSnapshot, query, where } from 'firebase/firestore';
   import { dbClient } from '$lib/firebase/firebase.client';
+  import icon from '$lib/assets/icon.png';
 
   const { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -20,6 +21,7 @@
       where('eventId', '==', data.eventId)
     );
     const unsubscribe = onSnapshot(q, snapshot => {
+      isLive = true;
       slots = snapshot.docs
         .map(doc => ({ ...doc.data(), docId: doc.id } as InterviewSlot))
         .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
@@ -33,6 +35,46 @@
   );
   let bookingError = $state('');
   let isBooking = $state(false);
+  let showChangeForm = $state(false);
+  let changeRequestedSlotId = $state('');
+  let changeNote = $state('');
+  let isRequestingChange = $state(false);
+  let changeRequestError = $state('');
+  let changeRequestSent = $state(false);
+
+  async function submitChangeRequest() {
+    if (!changeRequestedSlotId) return;
+    isRequestingChange = true;
+    changeRequestError = '';
+    const token = new URLSearchParams(window.location.search).get('token') ?? '';
+    const res = await fetch('/api/slots/request-change', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, requestedSlotId: changeRequestedSlotId, note: changeNote })
+    });
+    if (res.ok) {
+      changeRequestSent = true;
+      showChangeForm = false;
+    } else {
+      const err = await res.json();
+      changeRequestError = err.error ?? 'Errore durante la richiesta';
+    }
+    isRequestingChange = false;
+  }
+
+  let isLive = $state(false);
+  let onboardingDismissed = $state(
+    typeof sessionStorage !== 'undefined'
+      ? sessionStorage.getItem('onboarding_dismissed') === '1'
+      : false
+  );
+
+  function dismissOnboarding() {
+    onboardingDismissed = true;
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem('onboarding_dismissed', '1');
+    }
+  }
 
   // Easter egg per admin: 5 click sul titolo in 2 secondi
   let clickCount = $state(0);
@@ -86,9 +128,25 @@
       view = 'confirmed';
     } else {
       const err = await res.json();
-      bookingError = err.error ?? 'Errore durante la prenotazione';
+      const msg: string = err.error ?? 'Errore durante la prenotazione';
+      bookingError = msg.includes('non è disponibile')
+        ? 'Qualcuno ha appena prenotato questo slot 😅 Scegline un altro 👇'
+        : msg;
     }
     isBooking = false;
+  }
+
+  function buildGCalUrl(slot: InterviewSlot): string {
+    const start = slot.startTime.replace(/[-:]/g, '').replace('.000Z', 'Z');
+    const end   = slot.endTime.replace(/[-:]/g, '').replace('.000Z', 'Z');
+    const params = new URLSearchParams({
+      action: 'TEMPLATE',
+      text: 'Intervista Bacarotech — Global Azure Veneto 2026',
+      dates: `${start}/${end}`,
+      details: 'Chiacchierata free-style con Michele di Bacarotech. 5-7 minuti, senza copione.',
+      location: 'Area divanetti, vicino alla reception — cerca la DJI Action su cavalletto'
+    });
+    return `https://calendar.google.com/calendar/render?${params.toString()}`;
   }
 </script>
 
@@ -103,6 +161,7 @@
     <button
       disabled={!available}
       onclick={() => { selectedSlot = available ? slot : null; }}
+      title={preferred ? 'Slot che hai indicato disponibile via email' : undefined}
       class="w-full text-left rounded-xl border p-3 transition-all
         {selected
           ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-300'
@@ -124,7 +183,7 @@
             : available
               ? preferred ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
               : 'bg-gray-200 text-gray-400'}">
-          {isMe ? '✓ Il tuo slot' : available ? (preferred ? '★ Preferenza' : 'Libero') : (slot.speakerName ?? 'Occupato')}
+          {isMe ? '✓ Il tuo slot' : available ? (preferred ? '★ Disponibile' : 'Libero') : (slot.speakerName ?? 'Occupato')}
         </span>
       </div>
       {#if !!data.speaker}
@@ -194,6 +253,19 @@
   </div>
 {/snippet}
 
+{#snippet bacaroFooter()}
+  <div class="mt-8 border-t border-gray-100 pt-4 pb-6 text-center">
+    <div class="flex items-center justify-center gap-1.5 mb-1">
+      <img src={icon} alt="Bacarotech" class="h-4 w-auto opacity-60" />
+      <span class="text-xs text-gray-400 font-medium">Bacarotech</span>
+    </div>
+    <p class="text-xs text-gray-400 max-w-xs mx-auto leading-relaxed">
+      Associazione culturale no-profit, gestita da volontari. Questa webapp usa strumenti gratuiti o a costo minimo per contenere i costi.
+      Alcune funzionalità (es. notifica email di conferma) non sono disponibili per questa ragione.
+    </p>
+  </div>
+{/snippet}
+
 <div class="min-h-screen bg-gray-50 px-4 py-6 max-w-5xl mx-auto">
 
   <!-- Tab nav: visible on all views except 'confirmed' -->
@@ -228,8 +300,8 @@
   {#if view === 'error'}
     <div class="bg-white rounded-xl shadow p-6">
       <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">{data.eventConfig.dayLabel}</p>
-      <button 
-        type="button" 
+      <button
+        type="button"
         onclick={handleAdminClick}
         class="text-left block w-full focus:outline-none"
       >
@@ -256,6 +328,7 @@
       </form>
     </div>
     {@render scheduleOverview()}
+    {@render bacaroFooter()}
 
   <!-- CONFIRMED: prenotazione effettuata -->
   {:else if view === 'confirmed'}
@@ -270,15 +343,41 @@
       <p class="text-gray-500 text-sm">
         {data.eventConfig.dayLabel} — ci vediamo lì! 🎤
       </p>
+
+      <!-- Add to calendar -->
+      {#if selectedSlot}
+        <a
+          href={buildGCalUrl(selectedSlot)}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="mt-4 inline-block rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-100"
+        >
+          📅 Aggiungi al calendario
+        </a>
+      {/if}
+
+      <!-- Info logistiche -->
+      <div class="mt-5 text-left rounded-xl border border-gray-100 bg-gray-50 p-4 space-y-3">
+        <div>
+          <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">📍 Dove trovarmi</p>
+          <p class="text-sm text-gray-700">Area divanetti vicino alla reception</p>
+          <p class="text-xs text-gray-500">Cerca la DJI Action su cavalletto</p>
+        </div>
+        <div>
+          <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">📱 Imprevisti last-minute</p>
+          <p class="text-sm text-gray-700">WhatsApp / Telegram: <span class="font-mono">@michele_scarpa · 348 348 2541</span></p>
+        </div>
+      </div>
     </div>
     {@render scheduleOverview()}
+    {@render bacaroFooter()}
 
   <!-- FORM: nessun token, accedi con email -->
   {:else if view === 'form'}
     <div class="bg-white rounded-xl shadow p-6">
       <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">{data.eventConfig.dayLabel}</p>
-      <button 
-        type="button" 
+      <button
+        type="button"
         onclick={handleAdminClick}
         class="text-left block w-full focus:outline-none"
       >
@@ -305,17 +404,37 @@
       </form>
     </div>
     {@render scheduleOverview()}
+    {@render bacaroFooter()}
 
   <!-- SLOTS: lista slot interattivi (speaker autenticato) -->
   {:else if view === 'slots'}
     <div class="md:grid md:grid-cols-[1fr_280px] md:gap-6">
       <!-- Left column: slot list -->
       <div class="space-y-4">
+
+      <!-- Onboarding banner -->
+      {#if !onboardingDismissed && data.speaker}
+        <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-3 flex items-start gap-2">
+          <span class="text-lg leading-none mt-0.5">🎤</span>
+          <div class="flex-1 text-sm text-indigo-800">
+            Prenota il tuo slot per la chiacchierata con Michele di Bacarotech —
+            <strong>5-7 minuti, free-style</strong>.
+            Gli slot in verde <strong>★</strong> sono quelli che hai indicato disponibili via email.
+          </div>
+          <button
+            type="button"
+            onclick={dismissOnboarding}
+            class="text-indigo-400 hover:text-indigo-600 text-lg leading-none"
+            aria-label="Chiudi"
+          >✕</button>
+        </div>
+      {/if}
+
       <!-- Header -->
       <div class="bg-white rounded-xl shadow p-4">
         <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">{data.eventConfig.dayLabel}</p>
-        <button 
-          type="button" 
+        <button
+          type="button"
           onclick={handleAdminClick}
           class="text-left block w-full focus:outline-none"
         >
@@ -326,6 +445,12 @@
           {#if data.speaker.talk}
             <p class="text-xs text-gray-400 mt-0.5">"{data.speaker.talk}"</p>
           {/if}
+          {#if isLive}
+            <p class="flex items-center gap-1 text-xs text-green-500 mt-1">
+              <span class="inline-block w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+              Aggiornamento in tempo reale
+            </p>
+          {/if}
         {/if}
       </div>
 
@@ -334,6 +459,57 @@
           <p class="text-green-700 font-semibold">
             ✅ Sei già prenotato per le {formatTime(myBookedSlot.startTime)}
           </p>
+
+          {#if changeRequestSent}
+            <p class="text-sm text-gray-500 mt-2">
+              ✅ Richiesta inviata a Michele. Ti risponderà su Telegram <strong>@michele_scarpa</strong>.
+            </p>
+          {:else if showChangeForm}
+            <div class="mt-3 text-left space-y-2">
+              <label for="change-slot-select" class="block text-xs text-gray-600 font-medium">Slot che preferiresti:</label>
+              <select
+                id="change-slot-select"
+                bind:value={changeRequestedSlotId}
+                class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              >
+                <option value="">— Seleziona uno slot —</option>
+                {#each slots.filter(s => s.status === 'AVAILABLE') as s (s.docId)}
+                  <option value={s.docId}>{formatTime(s.startTime)} – {formatTime(s.endTime)}</option>
+                {/each}
+              </select>
+              <textarea
+                bind:value={changeNote}
+                placeholder="Note per Michele (opzionale)"
+                rows="2"
+                class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm resize-none"
+              ></textarea>
+              {#if changeRequestError}
+                <p class="text-xs text-red-600">{changeRequestError}</p>
+              {/if}
+              <div class="flex gap-2">
+                <button
+                  onclick={submitChangeRequest}
+                  disabled={!changeRequestedSlotId || isRequestingChange}
+                  class="flex-1 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
+                >
+                  {isRequestingChange ? 'Invio...' : 'Invia richiesta'}
+                </button>
+                <button
+                  onclick={() => { showChangeForm = false; changeRequestError = ''; }}
+                  class="px-3 py-2 text-sm text-gray-500 hover:text-gray-700"
+                >
+                  Annulla
+                </button>
+              </div>
+            </div>
+          {:else}
+            <button
+              onclick={() => { showChangeForm = true; }}
+              class="mt-2 text-xs text-indigo-600 hover:text-indigo-800 underline"
+            >
+              Vuoi cambiare slot? →
+            </button>
+          {/if}
         </div>
       {/if}
 
@@ -347,6 +523,12 @@
           {/each}
         </div>
       </div>
+      {/if}
+
+      {#if !selectedSlot && !myBookedSlot}
+        <p class="text-xs text-gray-400 px-1">
+          💡 Usa il tab <strong>Programma</strong> per vedere il tuo talk e scegliere uno slot che non si sovrapponga alla tua sessione.
+        </p>
       {/if}
 
       <!-- Mattina -->
@@ -369,6 +551,10 @@
         </div>
       </div>
 
+      <p class="text-xs text-gray-400 px-1 mt-1">
+        👥 I nomi degli altri speaker sono visibili: così potete organizzarvi autonomamente se avete esigenze di orario simili.
+      </p>
+
       <!-- CTA conferma -->
       {#if selectedSlot && !myBookedSlot}
         <div class="bg-white rounded-xl shadow p-4 sticky bottom-4">
@@ -384,6 +570,8 @@
           </button>
         </div>
       {/if}
+
+      {@render bacaroFooter()}
       </div>
       <!-- Right column: sidebar (desktop only) -->
       <div class="hidden md:block">

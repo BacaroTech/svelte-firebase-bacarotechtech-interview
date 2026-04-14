@@ -1,10 +1,11 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { messaging } from "$lib/firebase/firebase.client"; // Usiamo l'alias $lib
-
+  import { messaging } from "$lib/firebase/firebase.client";
   import { getToken, onMessage } from "firebase/messaging";
   import { env } from "$env/dynamic/public";
   import { tooltip } from "../tools/tootlip";
+
+  const { role = 'speaker' }: { role?: 'admin' | 'speaker' } = $props();
 
   let notificationPermission: NotificationPermission = $state("default");
   let fcmToken = $state("");
@@ -58,7 +59,7 @@
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ token }),
+        body: JSON.stringify({ token, role }),
       });
 
       if (!response.ok) {
