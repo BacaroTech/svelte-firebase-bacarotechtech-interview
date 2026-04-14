@@ -1,6 +1,7 @@
 import { adminFirestore as db } from '$lib/firebase/firebase-admin.server';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { notifyAdmins } from '$lib/firebase/notify-admins.server';
 
 export const POST: RequestHandler = async ({ request }) => {
     let body: { slotId?: string; token?: string };
@@ -32,6 +33,7 @@ export const POST: RequestHandler = async ({ request }) => {
     const speakerDocId: string = speakerDoc.id;
 
     const slotRef = db.collection('slots').doc(slotId);
+    let bookedStartTime = '';
 
     try {
         await db.runTransaction(async (transaction) => {
@@ -45,6 +47,8 @@ export const POST: RequestHandler = async ({ request }) => {
                 throw new Error('Questo slot non è disponibile');
             }
 
+            bookedStartTime = slotDoc.data()!.startTime as string;
+
             transaction.update(slotRef, {
                 status: 'BOOKED',
                 speakerUid: speakerDocId,
@@ -54,6 +58,15 @@ export const POST: RequestHandler = async ({ request }) => {
 
             transaction.update(speakerDoc.ref, { status: 'booked' });
         });
+
+        // Notifica admin — fire and forget
+        const hora = new Date(bookedStartTime).toLocaleTimeString('it-IT', {
+            hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome'
+        });
+        await notifyAdmins(
+            '🎤 Nuova prenotazione',
+            `${speakerName} ha prenotato le ${hora}`
+        );
 
         return json({ message: 'Slot prenotato con successo!' }, { status: 200 });
     } catch (e: any) {
