@@ -130,6 +130,34 @@
     await navigator.clipboard.writeText(linkForSpeaker(speaker));
   }
 
+  function buildInviteMailto(speaker: Speaker): string {
+    const link = linkForSpeaker(speaker);
+    const subject = `Bacarotech Interview — Prenota il tuo slot | ${data.eventConfig.name}`;
+    const body = [
+      `Ciao ${speaker.name},`,
+      ``,
+      `sono Michele di Bacarotech!`,
+      ``,
+      `Ti scrivo perché sei tra i speaker selezionati per una chiacchierata video con me durante il ${data.eventConfig.name} (${data.eventConfig.dayLabel}).`,
+      ``,
+      `Si tratta di un'intervista informale di 5-7 minuti, completamente free-style: nessun copione, nessuna domanda preparata in anticipo. Parleremo del tuo talk, delle tue esperienze e di quello che vuoi condividere con la community di Bacarotech.`,
+      ``,
+      `Per prenotare il tuo slot clicca sul link qui sotto e scegli l'orario che preferisci:`,
+      ``,
+      `👉 ${link}`,
+      ``,
+      `Il link è personale — ti porta direttamente al tuo spazio di prenotazione senza bisogno di registrazione.`,
+      ``,
+      `Per qualsiasi dubbio puoi rispondere a questa email, scrivermi su Telegram (@michele_scarpa) o su WhatsApp al 348 348 2541.`,
+      ``,
+      `A presto!`,
+      `Michele`,
+      `Bacarotech — https://bacarotech.github.io/`,
+    ].join('\n');
+
+    return `mailto:${encodeURIComponent(speaker.email ?? '')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  }
+
   async function approveChangeRequest(crId: string) {
     const res = await fetch(`/api/change-requests/${crId}/approve`, { method: 'POST' });
     if (!res.ok) {
@@ -328,6 +356,15 @@
             >
               📋 Link
             </button>
+            {#if speaker.email}
+              <a
+                href={buildInviteMailto(speaker)}
+                class="text-xs text-green-700 hover:text-green-600 whitespace-nowrap"
+                title="Apri bozza email di invito"
+              >
+                ✉️ Invita
+              </a>
+            {/if}
             <button
               onclick={() => regenerateToken(speaker)}
               class="text-xs text-orange-600 hover:text-orange-500 whitespace-nowrap"
