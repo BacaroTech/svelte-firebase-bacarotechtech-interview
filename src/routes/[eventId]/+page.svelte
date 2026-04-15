@@ -428,6 +428,14 @@
           <p class="text-sm text-gray-700">WhatsApp / Telegram: <span class="font-mono">@michele_scarpa · 348 348 2541</span></p>
         </div>
       </div>
+
+      <button
+        type="button"
+        onclick={() => { view = 'slots'; }}
+        class="mt-4 w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+      >
+        Vai alla tua prenotazione →
+      </button>
     </div>
     {@render scheduleOverview()}
     {@render bacaroFooter()}
@@ -566,6 +574,19 @@
             >
               📅 Outlook
             </a>
+          </div>
+
+          <!-- Info logistiche sempre visibili -->
+          <div class="mt-4 text-left rounded-lg border border-green-100 bg-white p-3 space-y-2">
+            <div>
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-0.5">📍 Dove trovarmi</p>
+              <p class="text-sm text-gray-700">Area divanetti vicino alla reception</p>
+              <p class="text-xs text-gray-500">Cerca la DJI Action su cavalletto</p>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-0.5">📱 Imprevisti last-minute</p>
+              <p class="text-sm text-gray-700">WhatsApp / Telegram: <span class="font-mono">@michele_scarpa · 348 348 2541</span></p>
+            </div>
           </div>
 
           {#if changeRequestSent}
