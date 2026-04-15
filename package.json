@@ -12,7 +12,8 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"seed:azure-vicenza": "npx tsx scripts/seed-azure-vicenza.ts",
-		"seed:beta-test": "npx tsx scripts/seed-beta-test.ts"
+		"seed:beta-test": "npx tsx scripts/seed-beta-test.ts",
+		"seed:all": "npm run seed:azure-vicenza && npm run seed:beta-test"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-vercel": "^5.10.2",
