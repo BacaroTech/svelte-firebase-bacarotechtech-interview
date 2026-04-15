@@ -94,6 +94,11 @@ export const load: PageServerLoad = async ({ params, url, cookies }) => {
 };
 
 export const actions: Actions = {
+    logout: async ({ cookies, params }) => {
+        cookies.delete(SPEAKER_COOKIE, { path: '/' });
+        redirect(302, `/${params.eventId}`);
+    },
+
     emailLogin: async ({ request, params, cookies }) => {
         const formData = await request.formData();
         const email = ((formData.get('email') as string) ?? '').toLowerCase().trim();

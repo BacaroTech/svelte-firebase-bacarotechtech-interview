@@ -70,7 +70,7 @@
     if (!changeRequestedSlotId) return;
     isRequestingChange = true;
     changeRequestError = '';
-    const token = new URLSearchParams(window.location.search).get('token') ?? '';
+    const token = data.speaker?.token ?? '';
     const res = await fetch('/api/slots/request-change', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -149,7 +149,7 @@
     if (!selectedSlot) return;
     isBooking = true;
     bookingError = '';
-    const token = new URLSearchParams(window.location.search).get('token') ?? '';
+    const token = data.speaker?.token ?? '';
     const res = await fetch('/api/slots/book', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -503,7 +503,18 @@
         {#if data.speaker}
           <div class="flex items-center justify-between mt-1">
             <p class="text-sm text-gray-600">Ciao <strong>{data.speaker.name}</strong> 👋</p>
-            <InterviewNotification role="speaker" />
+            <div class="flex items-center gap-1">
+              <InterviewNotification role="speaker" />
+              <form method="POST" action="?/logout">
+                <button
+                  type="submit"
+                  class="p-2 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 text-xs"
+                  title="Esci"
+                >
+                  ⎋
+                </button>
+              </form>
+            </div>
           </div>
           {#if data.speaker.email}
             <p class="text-xs text-gray-400 mt-0.5">📧 {data.speaker.email}</p>
