@@ -223,6 +223,33 @@
     });
     return `https://outlook.live.com/calendar/0/deeplink/compose?${params.toString()}`;
   }
+
+  function buildAppleCalendarUrl(slot: InterviewSlot): string {
+    const summary = 'Intervista Bacarotech — Global Azure Veneto 2026';
+    const description = 'Chiacchierata free-style con Michele di Bacarotech. 5-7 minuti, senza copione.';
+    const location = 'Area divanetti, vicino alla reception — cerca la Fotocamera su cavalletto';
+    const start = toGCalDate(slot.startTime);
+    const end = toGCalDate(slot.endTime);
+    const now = toGCalDate(new Date().toISOString());
+
+    const ics = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Bacarotech//Interview Booking//EN',
+      'BEGIN:VEVENT',
+      `UID:${slot.id}-${new Date(slot.startTime).getTime()}@bacarotech.it`,
+      `DTSTAMP:${now}`,
+      `DTSTART:${start}`,
+      `DTEND:${end}`,
+      `SUMMARY:${summary}`,
+      `DESCRIPTION:${description}`,
+      `LOCATION:${location}`,
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].join('\r\n');
+
+    return `data:text/calendar;charset=utf8,${encodeURIComponent(ics)}`;
+  }
 </script>
 
 {#snippet slotRow(slot: InterviewSlot, interactive: boolean)}
@@ -472,6 +499,13 @@
           >
             📅 Outlook
           </a>
+          <a
+            href={buildAppleCalendarUrl(selectedSlot)}
+            download="intervista-bacarotech.ics"
+            class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+          >
+            📅 Apple / iCal
+          </a>
         </div>
       {/if}
 
@@ -641,6 +675,13 @@
               class="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100"
             >
               📅 Outlook
+            </a>
+            <a
+              href={buildAppleCalendarUrl(myBookedSlot)}
+              download="intervista-bacarotech.ics"
+              class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100"
+            >
+              📅 Apple / iCal
             </a>
           </div>
 
