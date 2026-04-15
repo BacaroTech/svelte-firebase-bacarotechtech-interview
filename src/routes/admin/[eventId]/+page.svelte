@@ -7,7 +7,18 @@
 
   const { data, form }: { data: PageData; form: ActionData } = $props();
 
-  let slots = $state(data.slots);
+  function toIso(v: any): string {
+    if (typeof v === 'string') return v;
+    if (typeof v?.toDate === 'function') return v.toDate().toISOString();
+    if (typeof v?.seconds === 'number') return new Date(v.seconds * 1000).toISOString();
+    return new Date(v).toISOString();
+  }
+
+  function normalizeSlot(doc: any): InterviewSlot {
+    return { ...doc, startTime: toIso(doc.startTime), endTime: toIso(doc.endTime) };
+  }
+
+  let slots = $state(data.slots.map(normalizeSlot));
   let speakers = $state(data.speakers);
 
   $effect(() => {
@@ -16,8 +27,9 @@
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
+        console.log('[onSnapshot] admin fired, docs:', snapshot.docs.length);
         slots = snapshot.docs
-          .map(doc => ({ ...doc.data(), docId: doc.id } as InterviewSlot))
+          .map(doc => normalizeSlot({ ...doc.data(), docId: doc.id }))
           .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
       },
       (err) => console.error('[onSnapshot] admin slots:', err)

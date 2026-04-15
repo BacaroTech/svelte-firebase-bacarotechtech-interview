@@ -13,8 +13,23 @@
 
   const { data, form }: { data: PageData; form: ActionData } = $props();
 
-  // Inizializzato dai dati SSR, poi aggiornato in real-time da Firestore
-  let slots = $state<InterviewSlot[]>(data.slots);
+  // Converte qualsiasi formato Timestamp in ISO string:
+  // - Firestore Client SDK Timestamp (da onSnapshot)    → .toDate()
+  // - Plain object { seconds, nanoseconds } (da devalue/SSR) → seconds * 1000
+  // - Già stringa ISO                                   → pass-through
+  function toIso(v: any): string {
+    if (typeof v === 'string') return v;
+    if (typeof v?.toDate === 'function') return v.toDate().toISOString();
+    if (typeof v?.seconds === 'number') return new Date(v.seconds * 1000).toISOString();
+    return new Date(v).toISOString();
+  }
+
+  function normalizeSlot(doc: any): InterviewSlot {
+    return { ...doc, startTime: toIso(doc.startTime), endTime: toIso(doc.endTime) };
+  }
+
+  // Inizializzato dai dati SSR (Timestamps serializzati come { seconds, nanoseconds })
+  let slots = $state<InterviewSlot[]>(data.slots.map(normalizeSlot));
 
   $effect(() => {
     if (!browser || !dbClient) return;
@@ -25,9 +40,10 @@
     const unsubscribe = onSnapshot(
       q,
       snapshot => {
+        console.log('[onSnapshot] fired, docs:', snapshot.docs.length);
         isLive = true;
         slots = snapshot.docs
-          .map(doc => ({ ...doc.data(), docId: doc.id } as InterviewSlot))
+          .map(doc => normalizeSlot({ ...doc.data(), docId: doc.id }))
           .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
       },
       err => {
