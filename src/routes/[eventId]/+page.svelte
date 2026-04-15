@@ -313,6 +313,13 @@
       target="_blank" rel="noopener noreferrer" class="text-xs text-indigo-600 hover:text-indigo-800 mt-2 inline-block">
       Visita il sito
     </a>
+    <p class="text-xs text-gray-400 mt-2">Contatta Michele per ogni dubbio</p>
+    <div class="flex justify-center gap-3 mt-1">
+      <a href="https://wa.me/393483482541" target="_blank" rel="noopener noreferrer"
+        class="text-xs text-green-600 hover:underline">📲 WhatsApp</a>
+      <a href="https://t.me/michele_scarpa" target="_blank" rel="noopener noreferrer"
+        class="text-xs text-blue-500 hover:underline">✈️ Telegram</a>
+    </div>
   </div>
 {/snippet}
 
