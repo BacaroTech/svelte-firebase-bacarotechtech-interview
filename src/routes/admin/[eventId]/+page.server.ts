@@ -114,6 +114,7 @@ export const actions: Actions = {
                 notes,
                 status: 'pending',
                 optional: isOptional,
+                activatedAt: null,
                 createdAt: new Date().toISOString()
             });
 

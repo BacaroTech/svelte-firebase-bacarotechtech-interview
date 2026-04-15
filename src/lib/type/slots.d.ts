@@ -25,6 +25,7 @@ export interface Speaker {
     preferredSlots: string[];    // docId degli slot preferiti (pre-dichiarati)
     notes: string;
     status: 'pending' | 'booked';
+    activatedAt: string | null;  // ISO string — prima volta che il link è stato usato
 }
 
 export interface UserState {

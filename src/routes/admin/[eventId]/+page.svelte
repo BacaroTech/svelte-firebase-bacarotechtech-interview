@@ -94,6 +94,20 @@
     await navigator.clipboard.writeText(linkForSpeaker(speaker));
   }
 
+  async function regenerateToken(speaker: Speaker) {
+    if (!confirm(`Rigenera il token per ${speaker.name}? Il link precedente diventerà invalido.`)) return;
+    const res = await fetch(`/api/speaker/${speaker.docId}/regenerate`, { method: 'POST' });
+    if (res.ok) {
+      const { token } = await res.json();
+      speakers = speakers.map(s => s.docId === speaker.docId ? { ...s, token, activatedAt: null } : s);
+    }
+  }
+
+  function formatActivatedAt(iso: string | null | undefined): string {
+    if (!iso) return '';
+    return new Date(iso).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  }
+
   async function updateSlotStatus(slotId: string, status: string) {
     const res = await fetch(`/api/slots/${slotId}`, {
       method: 'PATCH',
@@ -134,7 +148,8 @@
         eventId: data.eventId,
         preferredSlots: [],
         notes: newNotes.trim(),
-        status: 'pending'
+        status: 'pending',
+        activatedAt: null
       };
       speakers = [...speakers, newSpeaker];
       newLink = linkForSpeaker(newSpeaker);
@@ -233,22 +248,41 @@
     <div class="space-y-2">
       {#each speakers as speaker (speaker.docId)}
         {@const bookedSlot = slots.find(s => s.speakerUid === speaker.docId)}
-        <div class="flex items-center gap-3 p-3 rounded-lg border border-gray-100">
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-gray-900">{speaker.name}</p>
-            {#if speaker.talk}
-              <p class="text-xs text-gray-400 truncate">{speaker.talk}</p>
+        <div class="flex flex-col gap-1 p-3 rounded-lg border border-gray-100">
+          <div class="flex items-center gap-3">
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-gray-900">{speaker.name}</p>
+              {#if speaker.talk}
+                <p class="text-xs text-gray-400 truncate">{speaker.talk}</p>
+              {/if}
+            </div>
+            <span class="text-xs text-gray-500 min-w-16">
+              {bookedSlot ? formatTime(bookedSlot.startTime) : '—'}
+            </span>
+            <!-- Stato token -->
+            {#if speaker.activatedAt}
+              <span class="text-xs text-green-700 bg-green-50 border border-green-200 rounded px-2 py-0.5 whitespace-nowrap" title="Primo accesso: {formatActivatedAt(speaker.activatedAt)}">
+                ✅ Usato {formatActivatedAt(speaker.activatedAt)}
+              </span>
+            {:else}
+              <span class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-0.5 whitespace-nowrap">
+                ⏳ Non usato
+              </span>
             {/if}
+            <button
+              onclick={() => copyLink(speaker)}
+              class="text-xs text-indigo-600 hover:text-indigo-500 whitespace-nowrap"
+            >
+              📋 Link
+            </button>
+            <button
+              onclick={() => regenerateToken(speaker)}
+              class="text-xs text-orange-600 hover:text-orange-500 whitespace-nowrap"
+              title="Genera nuovo token — il link precedente diventa invalido"
+            >
+              ⟳ Rigenera
+            </button>
           </div>
-          <span class="text-xs text-gray-500 min-w-16">
-            {bookedSlot ? formatTime(bookedSlot.startTime) : '—'}
-          </span>
-          <button
-            onclick={() => copyLink(speaker)}
-            class="text-xs text-indigo-600 hover:text-indigo-500 whitespace-nowrap"
-          >
-            📋 Copia link
-          </button>
         </div>
       {/each}
       {#if speakers.length === 0}

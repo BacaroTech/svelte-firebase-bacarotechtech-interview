@@ -20,9 +20,39 @@ export const load: PageServerLoad = async ({ params, url, cookies }) => {
         error(404, 'Evento non trovato');
     }
 
-    // Se il token è nell'URL: salva in cookie e redirect alla URL pulita
+    // Se il token è nell'URL: verifica one-time-use, poi salva in cookie e redirect
     const tokenFromUrl = url.searchParams.get('token');
     if (tokenFromUrl) {
+        const snap = await adminFirestore
+            .collection('speakers')
+            .where('token', '==', tokenFromUrl)
+            .where('eventId', '==', eventId)
+            .limit(1)
+            .get();
+
+        if (snap.empty) {
+            // Token inesistente
+            const slotsSnapshot = await adminFirestore.collection('slots').where('eventId', '==', eventId).get();
+            const slots: InterviewSlot[] = slotsSnapshot.docs
+                .map(doc => ({ ...doc.data(), docId: doc.id } as InterviewSlot))
+                .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+            const eventConfig = EVENT_CONFIG[eventId as keyof typeof EVENT_CONFIG];
+            return { speaker: null, slots, eventId, eventConfig, tokenInvalid: true };
+        }
+
+        const speakerDoc = snap.docs[0];
+        if (speakerDoc.data().activatedAt) {
+            // Link già usato e nessun cookie valido → blocca
+            const slotsSnapshot = await adminFirestore.collection('slots').where('eventId', '==', eventId).get();
+            const slots: InterviewSlot[] = slotsSnapshot.docs
+                .map(doc => ({ ...doc.data(), docId: doc.id } as InterviewSlot))
+                .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+            const eventConfig = EVENT_CONFIG[eventId as keyof typeof EVENT_CONFIG];
+            return { speaker: null, slots, eventId, eventConfig, tokenInvalid: true, tokenAlreadyUsed: true };
+        }
+
+        // Prima volta → attiva il token
+        await speakerDoc.ref.update({ activatedAt: new Date().toISOString() });
         cookies.set(SPEAKER_COOKIE, tokenFromUrl, COOKIE_OPTS);
         redirect(302, `/${eventId}`);
     }

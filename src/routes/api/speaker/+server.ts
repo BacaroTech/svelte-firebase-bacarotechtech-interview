@@ -40,6 +40,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
             preferredSlots: body.preferredSlots ?? [],
             notes: body.notes ?? '',
             status: 'pending',
+            activatedAt: null,
             createdAt: new Date().toISOString()
         });
 
