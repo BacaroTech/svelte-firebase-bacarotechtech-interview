@@ -17,9 +17,10 @@ export const load: PageServerLoad = async ({ params }) => {
         error(404, 'Evento non trovato');
     }
 
-    const [slotsSnap, speakersSnap] = await Promise.all([
+    const [slotsSnap, speakersSnap, changeRequestsSnap] = await Promise.all([
         adminFirestore.collection('slots').where('eventId', '==', eventId).get(),
-        adminFirestore.collection('speakers').where('eventId', '==', eventId).get()
+        adminFirestore.collection('speakers').where('eventId', '==', eventId).get(),
+        adminFirestore.collection('change_requests').where('eventId', '==', eventId).orderBy('createdAt', 'desc').get()
     ]);
 
     const slots: InterviewSlot[] = slotsSnap.docs
@@ -29,10 +30,12 @@ export const load: PageServerLoad = async ({ params }) => {
     const speakers: Speaker[] = speakersSnap.docs
         .map(doc => ({ ...doc.data(), docId: doc.id } as Speaker));
 
+    const changeRequests = changeRequestsSnap.docs.map(doc => ({ ...doc.data(), docId: doc.id }));
+
     const eventConfig = EVENT_CONFIG[eventId as keyof typeof EVENT_CONFIG];
     const baseUrl = env.BASE_URL ?? 'http://localhost:5173';
 
-    return { slots, speakers, eventId, eventConfig, baseUrl };
+    return { slots, speakers, changeRequests, eventId, eventConfig, baseUrl };
 };
 
 export const actions: Actions = {

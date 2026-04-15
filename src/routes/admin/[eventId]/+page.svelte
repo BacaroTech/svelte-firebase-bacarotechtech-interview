@@ -20,6 +20,7 @@
 
   let slots = $state(data.slots.map(normalizeSlot));
   let speakers = $state(data.speakers);
+  let changeRequests = $state<any[]>(data.changeRequests ?? []);
 
   $effect(() => {
     if (!browser || !dbClient) return;
@@ -33,6 +34,41 @@
           .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
       },
       (err) => console.error('[onSnapshot] admin slots:', err)
+    );
+    return unsubscribe;
+  });
+
+  $effect(() => {
+    if (!browser || !dbClient) return;
+    const q = query(collection(dbClient, 'change_requests'), where('eventId', '==', data.eventId));
+    let initialized = false;
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const incoming = snapshot.docs
+          .map(doc => ({ ...doc.data(), docId: doc.id }))
+          .sort((a: any, b: any) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''));
+
+        // Notifica browser per le nuove richieste (non al primo caricamento)
+        if (initialized) {
+          snapshot.docChanges().forEach(change => {
+            if (change.type === 'added') {
+              const cr = change.doc.data();
+              if (Notification.permission === 'granted') {
+                const ora1 = new Date(cr.currentSlotTime).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+                const ora2 = new Date(cr.requestedSlotTime).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+                new Notification('🔄 Richiesta cambio slot', {
+                  body: `${cr.speakerName}: ${ora1} → ${ora2}${cr.note ? ` — "${cr.note}"` : ''}`,
+                  icon: '/icons/512.png'
+                });
+              }
+            }
+          });
+        }
+        initialized = true;
+        changeRequests = incoming;
+      },
+      (err) => console.error('[onSnapshot] admin change_requests:', err)
     );
     return unsubscribe;
   });
@@ -289,6 +325,47 @@
         <p class="text-sm text-gray-400 text-center py-4">Nessuno speaker ancora. Aggiungine uno!</p>
       {/if}
     </div>
+  </section>
+
+  <!-- STORICO RICHIESTE CAMBIO SLOT -->
+  <section class="bg-white rounded-xl shadow p-4">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-base font-semibold text-gray-900">Richieste cambio slot</h2>
+      {#if changeRequests.filter((r: any) => r.status === 'pending').length > 0}
+        <span class="text-xs font-semibold bg-orange-100 text-orange-700 rounded-full px-2 py-0.5">
+          {changeRequests.filter((r: any) => r.status === 'pending').length} in attesa
+        </span>
+      {/if}
+    </div>
+    {#if changeRequests.length === 0}
+      <p class="text-sm text-gray-400 text-center py-4">Nessuna richiesta ancora.</p>
+    {:else}
+      <div class="space-y-2">
+        {#each changeRequests as cr (cr.docId)}
+          {@const ora1 = new Date(cr.currentSlotTime).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
+          {@const ora2 = new Date(cr.requestedSlotTime).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
+          {@const when = new Date(cr.createdAt).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+          <div class="rounded-lg border p-3 {cr.status === 'pending' ? 'border-orange-200 bg-orange-50' : 'border-gray-100 bg-gray-50'}">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-900">
+                  {cr.speakerName}
+                  <span class="text-gray-500 font-normal">→</span>
+                  <span class="font-semibold text-orange-700">{ora1} → {ora2}</span>
+                </p>
+                {#if cr.note}
+                  <p class="text-xs text-gray-500 mt-0.5">"{cr.note}"</p>
+                {/if}
+                <p class="text-xs text-gray-400 mt-0.5">{when}</p>
+              </div>
+              <span class="text-xs rounded-full px-2 py-0.5 whitespace-nowrap {cr.status === 'pending' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-400'}">
+                {cr.status === 'pending' ? '⏳ In attesa' : '✅ Gestita'}
+              </span>
+            </div>
+          </div>
+        {/each}
+      </div>
+    {/if}
   </section>
 
   <!-- TEST NOTIFICA -->

@@ -63,6 +63,7 @@ export const POST: RequestHandler = async ({ request }) => {
     await db.collection('change_requests').add({
         speakerDocId: speakerDoc.id,
         speakerName: speaker.name as string,
+        eventId: speaker.eventId as string,
         currentSlotId: currentSlot.id,
         currentSlotTime: currentSlot.data().startTime as string,
         requestedSlotId,
