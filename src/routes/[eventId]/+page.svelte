@@ -66,6 +66,31 @@
   let changeRequestError = $state('');
   let changeRequestSent = $state(false);
 
+  let showReleaseForm = $state(false);
+  let releaseNote = $state('');
+  let isRequestingRelease = $state(false);
+  let releaseRequestError = $state('');
+  let releaseRequestSent = $state(false);
+
+  async function submitReleaseRequest() {
+    isRequestingRelease = true;
+    releaseRequestError = '';
+    const token = data.speaker?.token ?? '';
+    const res = await fetch('/api/slots/request-change', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, type: 'release', note: releaseNote })
+    });
+    if (res.ok) {
+      releaseRequestSent = true;
+      showReleaseForm = false;
+    } else {
+      const err = await res.json();
+      releaseRequestError = err.error ?? 'Errore durante la richiesta';
+    }
+    isRequestingRelease = false;
+  }
+
   async function submitChangeRequest() {
     if (!changeRequestedSlotId) return;
     isRequestingChange = true;
@@ -614,7 +639,40 @@
             </div>
           </div>
 
-          {#if changeRequestSent}
+          {#if releaseRequestSent}
+            <p class="text-sm text-gray-500 mt-2">
+              ✅ Richiesta di liberazione inviata. Michele ti contatterà su Telegram <strong>@michele_scarpa</strong>.
+            </p>
+          {:else if showReleaseForm}
+            <div class="mt-3 text-left space-y-2">
+              <p class="text-sm text-gray-700 font-medium">Vuoi liberare il tuo slot?</p>
+              <p class="text-xs text-gray-500">Michele vedrà la richiesta e libererà lo slot. Potrai poi prenotarne un altro o non partecipare.</p>
+              <textarea
+                bind:value={releaseNote}
+                placeholder="Motivo (opzionale)"
+                rows="2"
+                class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm resize-none"
+              ></textarea>
+              {#if releaseRequestError}
+                <p class="text-xs text-red-600">{releaseRequestError}</p>
+              {/if}
+              <div class="flex gap-2">
+                <button
+                  onclick={submitReleaseRequest}
+                  disabled={isRequestingRelease}
+                  class="flex-1 rounded-md bg-red-500 px-3 py-2 text-sm font-semibold text-white hover:bg-red-400 disabled:opacity-50"
+                >
+                  {isRequestingRelease ? 'Invio...' : 'Conferma liberazione'}
+                </button>
+                <button
+                  onclick={() => { showReleaseForm = false; releaseRequestError = ''; }}
+                  class="px-3 py-2 text-sm text-gray-500 hover:text-gray-700"
+                >
+                  Annulla
+                </button>
+              </div>
+            </div>
+          {:else if changeRequestSent}
             <p class="text-sm text-gray-500 mt-2">
               ✅ Richiesta inviata a Michele. Ti risponderà su Telegram <strong>@michele_scarpa</strong>.
             </p>
@@ -657,12 +715,20 @@
               </div>
             </div>
           {:else}
-            <button
-              onclick={() => { showChangeForm = true; }}
-              class="mt-2 text-xs text-indigo-600 hover:text-indigo-800 underline"
-            >
-              Vuoi cambiare slot? →
-            </button>
+            <div class="mt-3 flex flex-wrap justify-center gap-3">
+              <button
+                onclick={() => { showChangeForm = true; showReleaseForm = false; }}
+                class="text-xs text-indigo-600 hover:text-indigo-800 underline"
+              >
+                Cambia slot →
+              </button>
+              <button
+                onclick={() => { showReleaseForm = true; showChangeForm = false; }}
+                class="text-xs text-red-500 hover:text-red-700 underline"
+              >
+                Libera slot →
+              </button>
+            </div>
           {/if}
         </div>
       {/if}

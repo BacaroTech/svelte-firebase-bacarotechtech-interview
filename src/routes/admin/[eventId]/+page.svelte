@@ -130,6 +130,23 @@
     await navigator.clipboard.writeText(linkForSpeaker(speaker));
   }
 
+  async function approveChangeRequest(crId: string) {
+    const res = await fetch(`/api/change-requests/${crId}/approve`, { method: 'POST' });
+    if (!res.ok) {
+      const err = await res.json();
+      alert(err.error ?? 'Errore durante l\'approvazione');
+    }
+    // onSnapshot aggiornerà automaticamente changeRequests
+  }
+
+  async function dismissChangeRequest(crId: string) {
+    const res = await fetch(`/api/change-requests/${crId}/dismiss`, { method: 'POST' });
+    if (!res.ok) {
+      const err = await res.json();
+      alert(err.error ?? 'Errore durante la chiusura');
+    }
+  }
+
   async function regenerateToken(speaker: Speaker) {
     if (!confirm(`Rigenera il token per ${speaker.name}? Il link precedente diventerà invalido.`)) return;
     const res = await fetch(`/api/speaker/${speaker.docId}/regenerate`, { method: 'POST' });
@@ -343,24 +360,47 @@
       <div class="space-y-2">
         {#each changeRequests as cr (cr.docId)}
           {@const ora1 = new Date(cr.currentSlotTime).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
-          {@const ora2 = new Date(cr.requestedSlotTime).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
+          {@const ora2 = cr.requestedSlotTime ? new Date(cr.requestedSlotTime).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : null}
           {@const when = new Date(cr.createdAt).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
-          <div class="rounded-lg border p-3 {cr.status === 'pending' ? 'border-orange-200 bg-orange-50' : 'border-gray-100 bg-gray-50'}">
+          {@const isRelease = cr.type === 'release'}
+          <div class="rounded-lg border p-3 {cr.status === 'pending' ? (isRelease ? 'border-red-200 bg-red-50' : 'border-orange-200 bg-orange-50') : 'border-gray-100 bg-gray-50'}">
             <div class="flex items-start justify-between gap-2">
               <div class="flex-1 min-w-0">
                 <p class="text-sm font-medium text-gray-900">
                   {cr.speakerName}
-                  <span class="text-gray-500 font-normal">→</span>
-                  <span class="font-semibold text-orange-700">{ora1} → {ora2}</span>
+                  {#if isRelease}
+                    <span class="text-red-600 font-normal ml-1">vuole liberare le {ora1}</span>
+                  {:else}
+                    <span class="font-semibold text-orange-700 ml-1">{ora1} → {ora2}</span>
+                  {/if}
                 </p>
                 {#if cr.note}
                   <p class="text-xs text-gray-500 mt-0.5">"{cr.note}"</p>
                 {/if}
                 <p class="text-xs text-gray-400 mt-0.5">{when}</p>
               </div>
-              <span class="text-xs rounded-full px-2 py-0.5 whitespace-nowrap {cr.status === 'pending' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-400'}">
-                {cr.status === 'pending' ? '⏳ In attesa' : '✅ Gestita'}
-              </span>
+              <div class="flex flex-col items-end gap-1 shrink-0">
+                <span class="text-xs rounded-full px-2 py-0.5 whitespace-nowrap
+                  {cr.status === 'pending' ? (isRelease ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700') : 'bg-gray-100 text-gray-400'}">
+                  {cr.status === 'pending' ? '⏳ In attesa' : cr.status === 'approved' ? '✅ Eseguita' : '🚫 Chiusa'}
+                </span>
+                {#if cr.status === 'pending'}
+                  <div class="flex gap-1 mt-1">
+                    <button
+                      onclick={() => approveChangeRequest(cr.docId)}
+                      class="text-xs rounded px-2 py-1 bg-green-600 text-white hover:bg-green-500 whitespace-nowrap"
+                    >
+                      {isRelease ? '📤 Libera' : '↔ Effettua'}
+                    </button>
+                    <button
+                      onclick={() => dismissChangeRequest(cr.docId)}
+                      class="text-xs rounded px-2 py-1 bg-gray-200 text-gray-600 hover:bg-gray-300 whitespace-nowrap"
+                    >
+                      Chiudi
+                    </button>
+                  </div>
+                {/if}
+              </div>
             </div>
           </div>
         {/each}
