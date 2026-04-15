@@ -177,7 +177,7 @@
       action: 'TEMPLATE',
       text: 'Intervista Bacarotech — Global Azure Veneto 2026',
       details: 'Chiacchierata free-style con Michele di Bacarotech. 5-7 minuti, senza copione.',
-      location: 'Area divanetti, vicino alla reception — cerca la DJI Action su cavalletto',
+      location: 'Area divanetti, vicino alla reception — cerca la Fotocamera su cavalletto',
       add: 'scarpa.michele.90@gmail.com'
     });
     // dates contiene '/' che non deve essere codificato da URLSearchParams
@@ -190,7 +190,7 @@
       startdt: slot.startTime,
       enddt: slot.endTime,
       body: 'Chiacchierata free-style con Michele di Bacarotech. 5-7 minuti, senza copione.',
-      location: 'Area divanetti, vicino alla reception — cerca la DJI Action su cavalletto',
+      location: 'Area divanetti, vicino alla reception — cerca la Fotocamera su cavalletto',
       to: 'scarpa.michele.90@gmail.com'
     });
     return `https://outlook.live.com/calendar/0/deeplink/compose?${params.toString()}`;
@@ -421,11 +421,20 @@
         <div>
           <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">📍 Dove trovarmi</p>
           <p class="text-sm text-gray-700">Area divanetti vicino alla reception</p>
-          <p class="text-xs text-gray-500">Cerca la DJI Action su cavalletto</p>
+          <p class="text-xs text-gray-500">Cerca la fotocamera su cavalletto</p>
         </div>
         <div>
           <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">📱 Imprevisti last-minute</p>
-          <p class="text-sm text-gray-700">WhatsApp / Telegram: <span class="font-mono">@michele_scarpa · 348 348 2541</span></p>
+          <div class="flex flex-wrap gap-2 mt-1">
+              <a href="https://wa.me/393483482541" target="_blank" rel="noopener noreferrer"
+                class="inline-flex items-center gap-1 text-sm text-green-700 hover:underline">
+                📲 WhatsApp
+              </a>
+              <a href="https://t.me/michele_scarpa" target="_blank" rel="noopener noreferrer"
+                class="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline">
+                ✈️ Telegram
+              </a>
+            </div>
         </div>
       </div>
 
@@ -581,11 +590,20 @@
             <div>
               <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-0.5">📍 Dove trovarmi</p>
               <p class="text-sm text-gray-700">Area divanetti vicino alla reception</p>
-              <p class="text-xs text-gray-500">Cerca la DJI Action su cavalletto</p>
+              <p class="text-xs text-gray-500">Cerca la fotocamera su cavalletto</p>
             </div>
             <div>
               <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-0.5">📱 Imprevisti last-minute</p>
-              <p class="text-sm text-gray-700">WhatsApp / Telegram: <span class="font-mono">@michele_scarpa · 348 348 2541</span></p>
+              <div class="flex flex-wrap gap-2 mt-1">
+              <a href="https://wa.me/393483482541" target="_blank" rel="noopener noreferrer"
+                class="inline-flex items-center gap-1 text-sm text-green-700 hover:underline">
+                📲 WhatsApp
+              </a>
+              <a href="https://t.me/michele_scarpa" target="_blank" rel="noopener noreferrer"
+                class="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline">
+                ✈️ Telegram
+              </a>
+            </div>
             </div>
           </div>
 
