@@ -22,6 +22,13 @@
   let speakers = $state(data.speakers);
   let changeRequests = $state<any[]>(data.changeRequests ?? []);
 
+  // Sincronizza quando si naviga tra eventi (data cambia, $state no)
+  $effect(() => {
+    slots = data.slots.map(normalizeSlot);
+    speakers = data.speakers;
+    changeRequests = data.changeRequests ?? [];
+  });
+
   $effect(() => {
     if (!browser || !dbClient) return;
     const q = query(collection(dbClient, 'slots'), where('eventId', '==', data.eventId));
