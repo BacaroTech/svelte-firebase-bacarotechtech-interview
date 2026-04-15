@@ -54,8 +54,9 @@
   });
 
   let selectedSlot = $state<InterviewSlot | null>(null);
+  const showEmailLogin = data.eventConfig.showEmailLogin ?? true;
   let view = $state<'slots' | 'confirmed' | 'error' | 'form' | 'schedule'>(
-    data.tokenInvalid ? 'error' : data.speaker ? 'slots' : 'form'
+    data.tokenInvalid ? 'error' : data.speaker ? 'slots' : (showEmailLogin ? 'form' : 'schedule')
   );
   let bookingError = $state('');
   let isBooking = $state(false);
@@ -389,25 +390,29 @@
       >
         <h1 class="text-lg font-bold text-gray-900 mb-1">{data.eventConfig.name}</h1>
       </button>
-      <p class="text-sm text-amber-600 mb-4">Link non valido o scaduto — accedi con la tua email.</p>
-      <form method="POST" action="?/emailLogin" class="space-y-3">
-        <input
-          type="email"
-          name="email"
-          placeholder="la-tua@email.it"
-          required
-          class="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-        />
-        {#if form?.emailError}
-          <p class="text-sm text-red-600">{form.emailError}</p>
-        {/if}
-        <button
-          type="submit"
-          class="w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
-        >
-          Accedi
-        </button>
-      </form>
+      {#if showEmailLogin}
+        <p class="text-sm text-amber-600 mb-4">Link non valido o scaduto — accedi con la tua email.</p>
+        <form method="POST" action="?/emailLogin" class="space-y-3">
+          <input
+            type="email"
+            name="email"
+            placeholder="la-tua@email.it"
+            required
+            class="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          />
+          {#if form?.emailError}
+            <p class="text-sm text-red-600">{form.emailError}</p>
+          {/if}
+          <button
+            type="submit"
+            class="w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
+          >
+            Accedi
+          </button>
+        </form>
+      {:else}
+        <p class="text-sm text-amber-600">Link non valido o scaduto. Contatta Michele per ricevere un nuovo link.</p>
+      {/if}
     </div>
     {@render scheduleOverview()}
     {@render bacaroFooter()}
@@ -481,8 +486,8 @@
     {@render scheduleOverview()}
     {@render bacaroFooter()}
 
-  <!-- FORM: nessun token, accedi con email -->
-  {:else if view === 'form'}
+  <!-- FORM: nessun token, accedi con email (solo se showEmailLogin) -->
+  {:else if view === 'form' && showEmailLogin}
     <div class="bg-white rounded-xl shadow p-6">
       <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">{data.eventConfig.dayLabel}</p>
       <button
