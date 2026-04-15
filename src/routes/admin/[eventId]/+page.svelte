@@ -143,25 +143,42 @@
     const subject = `Intervista video Bacarotech — ${data.eventConfig.name}, ${data.eventConfig.dayLabel}`;
 
     // ── Modifica qui il testo dell'email di invito ──────────────────────────
-    const body = `Ciao ${speaker.name},
-
-sono Michele di Bacarotech, una community di sviluppatori attiva come media partner per eventi tech (Azure meetup, GDG DevFest, PyData, ...).
-Come anticipato nella mail di gruppo, ${data.eventConfig.dayLabel} sarò al ${data.eventConfig.name} per realizzare un vlog e delle brevi interviste agli speaker. L'idea è semplice: creare uno specchietto dell'evento per chi non c'era, dare visibilità a voi speaker e supportare gli organizzatori.
-Si tratta di 5-7 minuti, in modo informale e senza copione. Parleremo del tuo talk, delle tue esperienze e di quello che vuoi condividere con la community.
-L'intervista verrà pubblicata sul canale YouTube di Bacarotech e in un trailer sui nostri social (LinkedIn, Instagram, TikTok), con tutti i link necessari per dare risonanza social.
-
-Per scegliere il tuo slot orario, clicca qui:
-👉 ${link}
-Il link è personale, non serve registrazione.
-Salvati questa email così potrai recuperare il link oppure il mio contatto diretto così se hai bisogno ti reinvio questa email.
-
-Per qualsiasi dubbio: rispondi a questa email, Telegram @michele_scarpa o WhatsApp 348 348 2541.
-A ${data.eventConfig.dayLabel.split(' ')[0]}!
-Michele
-Bacarotech — https://bacarotech.github.io/
-LinkedIn: https://www.linkedin.com/in/michele-scarpa-90-arco/`;
+    const lines = [
+      `Ciao ${speaker.name},`,
+      ``,
+      `sono Michele di Bacarotech, una community di sviluppatori attiva come media partner per eventi tech (Azure meetup, GDG DevFest, PyData, ...).`,
+      ``,
+      `Come anticipato nella mail di gruppo, ${data.eventConfig.dayLabel} sarò al ${data.eventConfig.name} per realizzare un vlog e delle brevi interviste agli speaker.`,
+      `L'idea è semplice: creare uno specchietto dell'evento per chi non c'era, dare visibilità a voi speaker e supportare gli organizzatori.`,
+      ``,
+      `Si tratta di 5-7 minuti, in modo informale e senza copione.`,
+      `Parleremo del tuo talk, delle tue esperienze e di quello che vuoi condividere con la community.`,
+      ``,
+      `L'intervista verrà pubblicata sul canale YouTube di Bacarotech e in un trailer sui nostri social (LinkedIn, Instagram, TikTok), con tutti i link necessari per dare risonanza social.`,
+      ``,
+      `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+      `Per scegliere il tuo slot orario, clicca qui:`,
+      `👉 ${link}`,
+      `Il link è personale, non serve registrazione.`,
+      `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+      ``,
+      `Salvati questa email così potrai recuperare il link; oppure salvati il mio contatto così se hai bisogno te la reinvio.`,
+      ``,
+      `Per qualsiasi dubbio:`,
+      `→ Rispondi a questa email`,
+      `→ Telegram: @michele_scarpa`,
+      `→ WhatsApp: 348 348 2541`,
+      ``,
+      `A ${data.eventConfig.dayLabel.split(' ')[0]}!`,
+      `Michele`,
+      ``,
+      `Bacarotech — https://bacarotech.github.io/`,
+      `LinkedIn: https://www.linkedin.com/in/michele-scarpa-90-arco/`,
+    ];
     // ───────────────────────────────────────────────────────────────────────
 
+    // mailto richiede CRLF per i ritorni a capo
+    const body = lines.join('\r\n');
     return `mailto:${encodeURIComponent(speaker.email ?? '')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   }
 
