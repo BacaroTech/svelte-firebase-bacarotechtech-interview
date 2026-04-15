@@ -132,28 +132,28 @@
 
   function buildInviteMailto(speaker: Speaker): string {
     const link = linkForSpeaker(speaker);
-    const subject = `Bacarotech Interview — Prenota il tuo slot | ${data.eventConfig.name}`;
-    const body = [
-      `Ciao ${speaker.name},`,
-      ``,
-      `sono Michele di Bacarotech!`,
-      ``,
-      `Ti scrivo perché sei tra i speaker selezionati per una chiacchierata video con me durante il ${data.eventConfig.name} (${data.eventConfig.dayLabel}).`,
-      ``,
-      `Si tratta di un'intervista informale di 5-7 minuti, completamente free-style: nessun copione, nessuna domanda preparata in anticipo. Parleremo del tuo talk, delle tue esperienze e di quello che vuoi condividere con la community di Bacarotech.`,
-      ``,
-      `Per prenotare il tuo slot clicca sul link qui sotto e scegli l'orario che preferisci:`,
-      ``,
-      `👉 ${link}`,
-      ``,
-      `Il link è personale — ti porta direttamente al tuo spazio di prenotazione senza bisogno di registrazione.`,
-      ``,
-      `Per qualsiasi dubbio puoi rispondere a questa email, scrivermi su Telegram (@michele_scarpa) o su WhatsApp al 348 348 2541.`,
-      ``,
-      `A presto!`,
-      `Michele`,
-      `Bacarotech — https://bacarotech.github.io/`,
-    ].join('\n');
+
+    const subject = `Intervista video Bacarotech — ${data.eventConfig.name}, ${data.eventConfig.dayLabel}`;
+
+    // ── Modifica qui il testo dell'email di invito ──────────────────────────
+    const body = `Ciao ${speaker.name},
+
+sono Michele di Bacarotech, una community di sviluppatori attiva come media partner per eventi tech (Azure meetup, GDG DevFest, PyData, ...).
+Come anticipato nella mail di gruppo, ${data.eventConfig.dayLabel} sarò al ${data.eventConfig.name} per realizzare un vlog e delle brevi interviste agli speaker. L'idea è semplice: creare uno specchietto dell'evento per chi non c'era, dare visibilità a voi speaker e supportare gli organizzatori.
+Si tratta di 5-7 minuti, in modo informale e senza copione. Parleremo del tuo talk, delle tue esperienze e di quello che vuoi condividere con la community.
+L'intervista verrà pubblicata sul canale YouTube di Bacarotech e in un trailer sui nostri social (LinkedIn, Instagram, TikTok), con tutti i link necessari per dare risonanza social.
+
+Per scegliere il tuo slot orario, clicca qui:
+👉 ${link}
+Il link è personale, non serve registrazione.
+Salvati questa email così potrai recuperare il link oppure il mio contatto diretto così se hai bisogno ti reinvio questa email.
+
+Per qualsiasi dubbio: rispondi a questa email, Telegram @michele_scarpa o WhatsApp 348 348 2541.
+A ${data.eventConfig.dayLabel.split(' ')[0]}!
+Michele
+Bacarotech — https://bacarotech.github.io/
+LinkedIn: https://www.linkedin.com/in/michele-scarpa-90-arco/`;
+    // ───────────────────────────────────────────────────────────────────────
 
     return `mailto:${encodeURIComponent(speaker.email ?? '')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   }
