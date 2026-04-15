@@ -55,8 +55,10 @@
 
   let selectedSlot = $state<InterviewSlot | null>(null);
   const showEmailLogin = data.eventConfig.showEmailLogin ?? true;
-  let view = $state<'slots' | 'confirmed' | 'error' | 'form' | 'schedule'>(
-    data.tokenInvalid ? 'error' : data.speaker ? 'slots' : (showEmailLogin ? 'form' : 'schedule')
+  let view = $state<'slots' | 'confirmed' | 'error' | 'form' | 'locked' | 'schedule'>(
+    data.tokenInvalid ? 'error' :
+    data.speaker ? 'slots' :
+    showEmailLogin ? 'form' : 'locked'
   );
   let bookingError = $state('');
   let isBooking = $state(false);
@@ -352,7 +354,7 @@
 <div class="min-h-screen bg-gray-50 px-4 py-6 max-w-5xl mx-auto">
 
   <!-- Tab nav: visible on all views except 'confirmed' -->
-  {#if view !== 'confirmed'}
+  {#if view !== 'confirmed' && view !== 'locked'}
     <div role="tablist" class="flex gap-2 bg-white rounded-xl shadow p-1 mb-4 max-w-lg mx-auto">
       <button
         type="button"
@@ -413,6 +415,26 @@
       {:else}
         <p class="text-sm text-amber-600">Link non valido o scaduto. Contatta Michele per ricevere un nuovo link.</p>
       {/if}
+    </div>
+    {@render scheduleOverview()}
+    {@render bacaroFooter()}
+
+  <!-- LOCKED: accesso solo tramite link personale -->
+  {:else if view === 'locked'}
+    <div class="bg-white rounded-xl shadow p-6 max-w-sm mx-auto text-center space-y-3">
+      <p class="text-3xl">🔒</p>
+      <button type="button" onclick={handleAdminClick} class="focus:outline-none">
+        <h1 class="text-lg font-bold text-gray-900">{data.eventConfig.name}</h1>
+      </button>
+      <p class="text-sm text-gray-500">{data.eventConfig.dayLabel}</p>
+      <p class="text-sm text-gray-700">Questa pagina è accessibile solo tramite il tuo link personale.</p>
+      <p class="text-sm text-gray-500">Hai ricevuto un'email di invito da Michele — usa il link che trovi lì.</p>
+      <div class="pt-2 flex flex-col gap-2">
+        <a href="https://t.me/michele_scarpa" target="_blank" rel="noopener noreferrer"
+          class="text-sm text-blue-600 hover:underline">✈️ Scrivi su Telegram @michele_scarpa</a>
+        <a href="https://wa.me/393483482541" target="_blank" rel="noopener noreferrer"
+          class="text-sm text-green-700 hover:underline">📲 WhatsApp 348 348 2541</a>
+      </div>
     </div>
     {@render scheduleOverview()}
     {@render bacaroFooter()}

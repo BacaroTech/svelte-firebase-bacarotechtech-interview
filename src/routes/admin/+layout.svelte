@@ -2,12 +2,11 @@
   import { page } from '$app/stores';
   import type { Snippet } from 'svelte';
   import InterviewNotification from '$lib/components/notification/InterviewNotification.svelte';
+  import { EVENT_CONFIG } from '$lib/config/events';
 
   const { children }: { children: Snippet } = $props();
 
-  const events = [
-    { id: 'azure-vicenza', label: 'Azure Vicenza', emoji: '☁️' },
-  ];
+  const events = Object.entries(EVENT_CONFIG).map(([id, cfg]) => ({ id, label: cfg.name }));
 </script>
 
 <div class="min-h-screen bg-gray-50 text-gray-600">
@@ -22,7 +21,7 @@
               ? 'bg-indigo-600 text-white'
               : 'text-gray-600 hover:bg-gray-100'}"
         >
-          {event.emoji} {event.label}
+          {event.label}
         </a>
       {/each}
       <a
