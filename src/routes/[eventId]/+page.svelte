@@ -674,7 +674,7 @@
             </div>
           {:else if changeRequestSent}
             <p class="text-sm text-gray-500 mt-2">
-              ✅ Richiesta inviata a Michele. Ti risponderà su Telegram <strong>@michele_scarpa</strong>.
+              ✅ Richiesta inviata a Michele.
             </p>
           {:else if showChangeForm}
             <div class="mt-3 text-left space-y-2">
