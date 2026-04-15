@@ -307,9 +307,12 @@
       <span class="text-xs text-gray-400 font-medium">Bacarotech</span>
     </div>
     <p class="text-xs text-gray-400 max-w-xs mx-auto leading-relaxed">
-      Associazione culturale no-profit, gestita da volontari. Questa webapp usa strumenti gratuiti o a costo minimo per contenere i costi.
-      Alcune funzionalità (es. notifica email di conferma) non sono disponibili per questa ragione.
+      Bacarotech: La tua community di sviluppatori dove si parla di programmazione a 360°
     </p>
+    <a href="https://bacarotech.github.io/" 
+      target="_blank" rel="noopener noreferrer" class="text-xs text-indigo-600 hover:text-indigo-800 mt-2 inline-block">
+      Visita il sito
+    </a>
   </div>
 {/snippet}
 
