@@ -4,6 +4,15 @@ import { error, redirect, fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import type { InterviewSlot, Speaker } from '$lib/type/slots';
 
+const SPEAKER_COOKIE = '__speaker_token';
+const COOKIE_OPTS = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax' as const,
+    path: '/',
+    maxAge: 60 * 60 * 24 * 30, // 30 giorni
+};
+
 export const load: PageServerLoad = async ({ params, url, cookies }) => {
     const { eventId } = params;
 
@@ -11,8 +20,12 @@ export const load: PageServerLoad = async ({ params, url, cookies }) => {
         error(404, 'Evento non trovato');
     }
 
-    // Prova prima dall'URL, poi dal cookie
-    const token = url.searchParams.get('token') ?? cookies.get('__speaker_token');
+    // Se il token è nell'URL: salva in cookie e redirect alla URL pulita
+    const tokenFromUrl = url.searchParams.get('token');
+    if (tokenFromUrl) {
+        cookies.set(SPEAKER_COOKIE, tokenFromUrl, COOKIE_OPTS);
+        redirect(302, `/${eventId}`);
+    }
 
     const slotsSnapshot = await adminFirestore
         .collection('slots')
@@ -24,6 +37,8 @@ export const load: PageServerLoad = async ({ params, url, cookies }) => {
         .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
 
     const eventConfig = EVENT_CONFIG[eventId as keyof typeof EVENT_CONFIG];
+
+    const token = cookies.get(SPEAKER_COOKIE);
 
     if (!token) {
         return { speaker: null, slots, eventId, eventConfig, tokenInvalid: false };
@@ -37,6 +52,8 @@ export const load: PageServerLoad = async ({ params, url, cookies }) => {
         .get();
 
     if (speakerSnapshot.empty) {
+        // Token in cookie non valido: lo cancella e mostra il form di login
+        cookies.delete(SPEAKER_COOKIE, { path: '/' });
         return { speaker: null, slots, eventId, eventConfig, tokenInvalid: true };
     }
 
@@ -47,7 +64,7 @@ export const load: PageServerLoad = async ({ params, url, cookies }) => {
 };
 
 export const actions: Actions = {
-    emailLogin: async ({ request, params }) => {
+    emailLogin: async ({ request, params, cookies }) => {
         const formData = await request.formData();
         const email = ((formData.get('email') as string) ?? '').toLowerCase().trim();
 
@@ -65,6 +82,7 @@ export const actions: Actions = {
         }
 
         const token = snap.docs[0].data().token as string;
-        redirect(302, `/${params.eventId}?token=${token}`);
+        cookies.set(SPEAKER_COOKIE, token, COOKIE_OPTS);
+        redirect(302, `/${params.eventId}`);
     }
 };
