@@ -6,7 +6,7 @@ export const EVENT_CONFIG: Record<EventId, { name: string; date: string; dayLabe
         name: 'Azure Global Meetup Vicenza',
         date: '2026-04-17',
         dayLabel: 'venerdì 17 aprile',
-        showEmailLogin: false
+        showEmailLogin: true
     },
     'gdg-pisa': {
         name: 'GDG Pisa',
