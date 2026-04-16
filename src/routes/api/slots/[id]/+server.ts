@@ -10,7 +10,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
     }
 
     const { id } = params;
-    let body: { status?: string };
+    let body: { status?: string; speakerUid?: string | null };
 
     try {
         body = await request.json();
@@ -23,11 +23,11 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
     }
 
     try {
-        if (body.status === 'AVAILABLE') {
-            // Leggi lo slot per trovare lo speaker da resettare
-            const slotDoc = await db.collection('slots').doc(id).get();
-            const currentSpeakerUid = slotDoc.data()?.speakerUid as string | null;
+        // Leggi lo slot per trovare lo speaker corrente (serve in più casi)
+        const slotDoc = await db.collection('slots').doc(id).get();
+        const currentSpeakerUid = slotDoc.data()?.speakerUid as string | null;
 
+        if (body.status === 'AVAILABLE') {
             await db.collection('slots').doc(id).update({
                 status: 'AVAILABLE',
                 speakerUid: null,
@@ -35,10 +35,29 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
                 bookedAt: null
             });
 
-            // Resetta lo speaker a pending se era prenotato su questo slot
             if (currentSpeakerUid) {
                 await db.collection('speakers').doc(currentSpeakerUid).update({ status: 'pending' });
             }
+        } else if (body.status === 'BOOKED' && body.speakerUid) {
+            // Booking manuale admin: assegna speaker specifico
+            const speakerDoc = await db.collection('speakers').doc(body.speakerUid).get();
+            if (!speakerDoc.exists) {
+                return json({ error: 'Speaker non trovato' }, { status: 404 });
+            }
+            const speakerName = speakerDoc.data()!.name as string;
+
+            // Resetta lo speaker precedente se diverso
+            if (currentSpeakerUid && currentSpeakerUid !== body.speakerUid) {
+                await db.collection('speakers').doc(currentSpeakerUid).update({ status: 'pending' });
+            }
+
+            await db.collection('slots').doc(id).update({
+                status: 'BOOKED',
+                speakerUid: body.speakerUid,
+                speakerName,
+                bookedAt: new Date().toISOString()
+            });
+            await db.collection('speakers').doc(body.speakerUid).update({ status: 'booked' });
         } else {
             await db.collection('slots').doc(id).update({ status: body.status });
         }

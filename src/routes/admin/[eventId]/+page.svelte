@@ -221,6 +221,29 @@
     });
     if (res.ok) {
       slots = slots.map(s => s.docId === slotId ? { ...s, status: status as any } : s);
+      // Se si libera lo slot, resetta anche lo speaker associato nello stato locale
+      if (status === 'AVAILABLE') {
+        slots = slots.map(s => s.docId === slotId ? { ...s, speakerUid: null, speakerName: null } : s);
+      }
+    }
+  }
+
+  async function bookSlotForSpeaker(slotId: string, speakerUid: string) {
+    if (!speakerUid) return;
+    const res = await fetch(`/api/slots/${slotId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'BOOKED', speakerUid })
+    });
+    if (res.ok) {
+      const speaker = speakers.find(s => s.docId === speakerUid);
+      slots = slots.map(s => s.docId === slotId
+        ? { ...s, status: 'BOOKED' as any, speakerUid, speakerName: speaker?.name ?? null }
+        : s
+      );
+    } else {
+      const err = await res.json();
+      alert(err.error ?? 'Errore durante il booking');
     }
   }
 
@@ -278,14 +301,25 @@
     <h2 class="text-base font-semibold text-gray-900 mb-3">Slot interviste</h2>
     <div class="space-y-2">
       {#each slots as slot (slot.docId)}
-        {@const speaker = speakerForSlot(slot)}
         <div class="flex items-center gap-3 p-3 rounded-lg border border-gray-100">
           <span class="text-sm font-mono text-gray-700 min-w-28">
             {formatTime(slot.startTime)} – {formatTime(slot.endTime)}
           </span>
-          <span class="text-sm text-gray-600 flex-1">
-            {speaker?.name ?? '—'}
-          </span>
+          <!-- Selettore speaker per booking manuale -->
+          <select
+            value={slot.speakerUid ?? ''}
+            onchange={(e) => {
+              const val = (e.target as HTMLSelectElement).value;
+              if (val) bookSlotForSpeaker(slot.docId, val);
+              else updateSlotStatus(slot.docId, 'AVAILABLE');
+            }}
+            class="text-sm rounded-md border border-gray-200 px-2 py-1 flex-1 min-w-0 truncate"
+          >
+            <option value="">— nessuno —</option>
+            {#each speakers as sp (sp.docId)}
+              <option value={sp.docId}>{sp.name}</option>
+            {/each}
+          </select>
           <select
             value={slot.status}
             onchange={(e) => updateSlotStatus(slot.docId, (e.target as HTMLSelectElement).value)}
